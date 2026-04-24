@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
@@ -62,7 +62,7 @@
 
         .value-active {
             color: var(--token-val);
-            transform: scale(1.1);
+            transform: scale(1.05);
             text-shadow: 0 0 10px var(--accent-bg);
         }
 
@@ -199,7 +199,7 @@
             </div>
         </div>
 
-        <!-- Variables & Output Sidebar -->
+        <!-- Output Sidebar -->
         <aside class="w-80 sidebar flex flex-col">
             <div class="p-4 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-sidebar)]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--text-muted)]"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
@@ -247,21 +247,24 @@
                     let line = lineRaw.trim();
                     if (!line) { currentLineIdx++; continue; }
 
-                    const forMatch = line.match(/^for\s+(\w+)\s+in\s+(.+):$/);
+                    const forMatch = lineRaw.match(/^((\s*)for\s+)(\w+)(\s+in\s+.+:)$/);
                     const whileMatch = line.match(/^while\s+(.+):$/);
-                    const assignmentMatch = line.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
-                    const printMatch = line.match(/^print\((.*)\)$/);
+                    const assignmentMatch = lineRaw.match(/^((\s*)(\w+)\s*([+\-*/]=|=)\s*)(.*)$/);
+                    const printMatch = lineRaw.match(/^((\s*)print\()(.+)(\))$/);
 
                     if (forMatch) {
-                        const varName = forMatch[1];
-                        const collection = this.evaluateExpression(forMatch[2], scope);
+                        const indent = forMatch[2];
+                        const varName = forMatch[3];
+                        const rest = forMatch[4];
+                        const collection = this.evaluateExpression(rest.replace('in ', '').replace(':', '').trim(), scope);
                         const loopBody = this.getLoopBody(currentLineIdx);
                         const loopStart = currentLineIdx;
 
                         for (const val of collection) {
                             scope[varName] = val;
                             // Flow: for 0 in range(4):
-                            this.addStep(loopStart, {...scope}, { [varName]: val }, [...currentConsole], `Assigning loop iterator ${varName} = ${val}`);
+                            const override = `${indent}for <span class="variable-swap value-active">${val}</span>${rest}`;
+                            this.addStep(loopStart, {...scope}, override, [...currentConsole], `Iterator ${varName} is now ${val}`);
                             
                             for (const bodyLine of loopBody) {
                                 this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
@@ -278,7 +281,7 @@
                         const loopStart = currentLineIdx;
 
                         while (this.evaluateCondition(cond, scope) && iterations < MAX_ITERATIONS) {
-                            this.addStep(loopStart, {...scope}, {}, [...currentConsole], "Checking condition");
+                            this.addStep(loopStart, {...scope}, null, [...currentConsole], "Checking condition");
                             for (const bodyLine of loopBody) {
                                 this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
                                 iterations++;
@@ -292,54 +295,51 @@
                     currentLineIdx++;
                     iterations++;
                 }
-                this.addStep(-1, {...scope}, {}, [...currentConsole], "Execution Finished");
+                this.addStep(-1, {...scope}, null, [...currentConsole], "Execution Finished");
             }
 
             processLine(lineRaw, idx, scope, currentConsole) {
-                let line = lineRaw.trim();
-                
-                // Print logic
-                const pm = line.match(/^print\((.*)\)$/);
-                if (pm) {
-                    const expr = pm[1];
-                    const val = this.evaluateExpression(expr, scope);
-                    // Step 1: print(0)
-                    this.addStep(idx, {...scope}, { [expr]: val }, [...currentConsole], "Preparing to print");
-                    // Step 2: Actually print
-                    currentConsole.push(String(val));
-                    this.addStep(idx, {...scope}, { [expr]: val }, [...currentConsole], `Printed: ${val}`);
-                    return;
-                }
-
-                // Assignment logic
-                const am = line.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
+                const am = lineRaw.match(/^((\s*)(\w+)\s*([+\-*/]=|=)\s*)(.*)$/);
                 if (am) {
-                    const varName = am[1], op = am[2], expr = am[3];
+                    const prefix = am[1], indent = am[2], varName = am[3], op = am[4], expr = am[5];
                     
-                    // Step 1: result = 0 * 10 (Substitute RHS variables)
-                    const rhsVars = this.getVariablesInExpr(expr, scope);
-                    this.addStep(idx, {...scope}, rhsVars, [...currentConsole], "Substituting variables in expression");
+                    // Step 1: Substituted RHS (e.g., result = 0 * 10)
+                    let substitutedRhs = expr;
+                    const keys = Object.keys(scope).sort((a,b) => b.length - a.length);
+                    keys.forEach(k => {
+                        substitutedRhs = substitutedRhs.replace(new RegExp(`\\b${k}\\b`, 'g'), `<span class="variable-swap value-active">${scope[k]}</span>`);
+                    });
+                    this.addStep(idx, {...scope}, `${prefix}${substitutedRhs}`, [...currentConsole], "Substituting values...");
 
+                    // Step 2: Simplified Result (e.g., result = 0)
                     const val = this.evaluateExpression(expr, scope);
-                    const oldVal = scope[varName];
                     if (op === '=') scope[varName] = val;
                     else if (op === '+=') scope[varName] = (scope[varName] || 0) + val;
                     
-                    // Step 2: result = 0 (Substitute LHS/Result)
-                    this.addStep(idx, {...scope}, { [varName]: scope[varName] }, [...currentConsole], `Assignment: ${varName} is now ${scope[varName]}`);
+                    this.addStep(idx, {...scope}, `${prefix}<span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `${varName} updated to ${scope[varName]}`);
                     return;
                 }
 
-                this.addStep(idx, {...scope}, {}, [...currentConsole]);
-            }
+                const pm = lineRaw.match(/^((\s*)print\()(.+)(\))$/);
+                if (pm) {
+                    const prefix = pm[1], indent = pm[2], expr = pm[3], suffix = pm[4];
+                    const val = this.evaluateExpression(expr, scope);
+                    
+                    // Step 1: Substituted argument
+                    let substitutedArg = expr;
+                    const keys = Object.keys(scope).sort((a,b) => b.length - a.length);
+                    keys.forEach(k => {
+                        substitutedArg = substitutedArg.replace(new RegExp(`\\b${k}\\b`, 'g'), `<span class="variable-swap value-active">${scope[k]}</span>`);
+                    });
+                    this.addStep(idx, {...scope}, `${prefix}${substitutedArg}${suffix}`, [...currentConsole], "Preparing to print...");
 
-            getVariablesInExpr(expr, scope) {
-                const map = {};
-                const words = expr.match(/[a-zA-Z_]\w*/g) || [];
-                words.forEach(w => {
-                    if (scope.hasOwnProperty(w)) map[w] = scope[w];
-                });
-                return map;
+                    // Step 2: Print Result
+                    currentConsole.push(String(val));
+                    this.addStep(idx, {...scope}, `${prefix}${val}${suffix}`, [...currentConsole], `Output: ${val}`);
+                    return;
+                }
+
+                this.addStep(idx, {...scope}, null, [...currentConsole]);
             }
 
             getLoopBody(startIndex) {
@@ -368,7 +368,6 @@
                 }
                 try {
                     let proc = expr;
-                    // Sort keys by length descending to avoid partial replacements (e.g., 'i' in 'result')
                     const keys = Object.keys(scope).sort((a,b) => b.length - a.length);
                     for (const k of keys) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), scope[k]); }
                     return Function(`"use strict"; return (${proc})`)();
@@ -383,8 +382,8 @@
                 } catch (e) { return false; }
             }
 
-            addStep(lineIdx, vars, displayMap, output, message) {
-                this.steps.push({ lineIndex: lineIdx, vars, displayMap, output, message });
+            addStep(lineIdx, vars, lineOverride, output, message) {
+                this.steps.push({ lineIndex: lineIdx, vars, lineOverride, output, message });
             }
         }
 
@@ -457,7 +456,7 @@
                 const div = document.createElement('div');
                 div.className = 'line-container px-4 py-1 rounded transition-colors flex';
                 div.id = `line-${i}`;
-                div.innerHTML = `<span class="w-8 text-[var(--text-muted)] text-sm mt-1 shrink-0">${i+1}</span><div class="flex-1">${line.split(/(\W+)/).map(t => `<span class="code-token ${t.match(/^[a-zA-Z_]\w*$/) ? 'token-word' : ''}" data-token="${t}">${t}</span>`).join('')}</div>`;
+                div.innerHTML = `<span class="w-8 text-[var(--text-muted)] text-sm mt-1 shrink-0">${i+1}</span><div class="line-content flex-1 whitespace-pre">${line}</div>`;
                 codeDisplay.appendChild(div);
             });
         }
@@ -466,11 +465,22 @@
             const step = interpreter.steps[idx];
             if (!step) return;
 
-            document.querySelectorAll('.line-container').forEach(l => l.classList.remove('line-highlight'));
+            // Reset all lines to their original text
+            document.querySelectorAll('.line-container').forEach((l, i) => {
+                l.classList.remove('line-highlight');
+                const content = l.querySelector('.line-content');
+                if (content) content.innerHTML = interpreter.lines[i];
+            });
+
             const activeLine = document.getElementById(`line-${step.lineIndex}`);
             if (activeLine) {
                 activeLine.classList.add('line-highlight');
                 activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // If this step has a specific visual override (substitution), apply it
+                if (step.lineOverride) {
+                    activeLine.querySelector('.line-content').innerHTML = step.lineOverride;
+                }
             }
 
             stepCounter.textContent = `Step ${idx+1} / ${interpreter.steps.length}`;
@@ -480,32 +490,10 @@
                 : '<div class="text-gray-500 italic">No output yet...</div>';
             consoleOutput.scrollTop = consoleOutput.scrollHeight;
 
-            // Clean previous step visuals in other lines
-            document.querySelectorAll('.token-word').forEach(t => {
-                t.textContent = t.dataset.token;
-                t.classList.remove('variable-swap', 'value-active');
-            });
-
-            // Substitution/Swap Logic based on the specific step's displayMap
-            if (activeLine) {
-                activeLine.querySelectorAll('.token-word').forEach(t => {
-                    const varName = t.dataset.token;
-                    // Only substitute if this specific variable is targeted in this step's displayMap
-                    if (step.displayMap && step.displayMap.hasOwnProperty(varName)) {
-                        t.textContent = step.displayMap[varName];
-                        t.classList.add('variable-swap', 'value-active');
-                        setTimeout(() => t.classList.remove('value-active'), 500);
-                    } else {
-                        t.textContent = varName;
-                        t.classList.remove('variable-swap', 'value-active');
-                    }
-                });
-            }
-
             document.getElementById('instruction').textContent = step.message || "Press Spacebar to step...";
             document.getElementById('loopInfo').innerHTML = `
                 <div class="flex justify-between"><span>Current Line:</span><span class="font-bold">${step.lineIndex + 1}</span></div>
-                <div class="flex justify-between"><span>Scopes Captured:</span><span class="font-bold">${Object.keys(step.vars).length}</span></div>
+                <div class="flex justify-between"><span>Step:</span><span class="font-bold">${idx + 1}</span></div>
             `;
         }
 
