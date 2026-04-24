@@ -9,7 +9,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
         :root {
-            /* Light Theme Variables */
             --bg-app: #ffffff;
             --bg-sidebar: #f6f8fa;
             --bg-editor: #ffffff;
@@ -26,7 +25,6 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Theme Variables */
             --bg-app: #0d1117;
             --bg-sidebar: #161b22;
             --bg-editor: #0d1117;
@@ -50,20 +48,17 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        .code-token {
-            display: inline-block;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
         .variable-swap {
             color: var(--token-var);
             font-weight: bold;
+            display: inline-block;
         }
 
         .value-active {
             color: var(--token-val);
             transform: scale(1.05);
             text-shadow: 0 0 10px var(--accent-bg);
+            transition: all 0.2s ease;
         }
 
         .line-highlight {
@@ -108,19 +103,37 @@
 
         #editorPane {
             border-right: 1px solid var(--border);
-            transition: flex 0.3s ease;
+        }
+
+        .code-line-wrapper {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.1rem 1rem;
+        }
+
+        .line-number {
+            width: 2.5rem;
+            text-align: right;
+            padding-right: 1rem;
+            color: var(--text-muted);
+            user-select: none;
+            font-size: 0.875rem;
+        }
+
+        .line-content {
+            flex: 1;
+            white-space: pre;
+            word-break: break-all;
         }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- Loading Screen -->
     <div id="loadingOverlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="spinner mb-4"></div>
-        <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse uppercase">Initializing...</div>
+        <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse uppercase">Initializing Environment...</div>
     </div>
 
-    <!-- Startup Popup -->
     <div id="startupPopup" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] px-4">
         <div class="bg-white dark:bg-[#161b22] border border-[#d0d7de] dark:border-[#30363d] rounded-xl p-8 max-w-sm w-full shadow-2xl text-center scale-90 transition-transform duration-300" id="popupContent">
             <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -139,30 +152,23 @@
         </div>
     </div>
 
-    <!-- Syntax Error Modal -->
     <div id="errorModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[120] px-4">
         <div class="bg-white dark:bg-[#161b22] border border-red-500 rounded-xl p-6 max-w-md w-full shadow-2xl">
             <div class="flex items-center gap-3 text-red-500 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h2 class="text-xl font-bold">Syntax Error</h2>
+                <h2 class="text-xl font-bold">Execution Error</h2>
             </div>
-            <p id="errorMessage" class="text-gray-600 dark:text-gray-400 mb-6 text-sm font-mono bg-gray-100 dark:bg-gray-800 p-3 rounded">
-                Unexpected indentation...
-            </p>
-            <button id="closeError" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-bold transition-colors">
-                Fix Code
-            </button>
+            <p id="errorMessage" class="text-gray-600 dark:text-gray-400 mb-6 text-sm font-mono bg-gray-100 dark:bg-gray-800 p-3 rounded break-words"></p>
+            <button id="closeError" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-bold transition-colors">Close</button>
         </div>
     </div>
 
-    <!-- Header -->
     <header class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
         <div class="flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
             <h1 class="text-xl font-bold tracking-tight">PyLoop<span class="text-[var(--accent)]">Visualizer</span></h1>
         </div>
         <div class="flex items-center gap-4">
-            <!-- Theme Toggle -->
             <button id="themeToggle" class="p-2 rounded-lg border border-[var(--border)] bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] transition-all">
                 <svg id="sunIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zm2.12 10.607a1 1 0 010-1.414l.706-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"/></svg>
                 <svg id="moonIcon" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
@@ -181,485 +187,363 @@
     </header>
 
     <main class="flex-1 flex overflow-hidden">
-        <!-- Editor Section (Now always visible) -->
         <div id="editorPane" class="flex-1 flex flex-col">
             <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)]">
                 main.py
             </div>
-            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[var(--bg-app)] text-[var(--text-main)] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter loop...">i = 0
-while i < 4:
-    result = i + i
-    print(result)
-    i += 1</textarea>
+            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[var(--bg-app)] text-[var(--text-main)] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter loop...">for i in range(1, 4):
+    for j in range(1, 4):
+        product = i * j
+        print(f"{i} * {j} = {product}")
+    
+    print("--- End of Row ---")</textarea>
             <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)]">
-                💡 Tip: Use <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Tab</kbd> for indentation. <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Ctrl + Enter</kbd> to run.
+                💡 Tip: Use <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Tab</kbd> to indent. <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Ctrl + Enter</kbd> to run.
             </div>
         </div>
 
-        <!-- Visualization Section -->
-        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[var(--bg-app)]">
+        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[var(--bg-app)] border-l border-[var(--border)]">
             <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] flex justify-between items-center">
-                <span>Execution Viewer</span>
+                <span>Execution Timeline</span>
                 <span id="stepCounter" class="text-[var(--accent)]">Step 0 / 0</span>
             </div>
-            <div id="codeDisplay" class="flex-1 p-8 text-xl leading-relaxed whitespace-pre-wrap select-none overflow-auto custom-scrollbar">
+            <div id="codeDisplay" class="flex-1 py-4 text-lg leading-relaxed select-none overflow-auto custom-scrollbar">
             </div>
             <div class="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border)] flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="h-3 w-3 rounded-full bg-[var(--success)] status-dot"></div>
-                    <span id="instruction" class="text-sm text-[var(--text-muted)] truncate max-w-[200px]">Step through execution...</span>
+                    <div class="h-3 w-3 rounded-full bg-[var(--success)]"></div>
+                    <span id="instruction" class="text-sm text-[var(--text-muted)] truncate max-w-[300px]">Press Spacebar...</span>
                 </div>
-                <button id="nextStepBtn" class="bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] text-[var(--text-main)] border border-[var(--border)] px-4 py-2 rounded text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
-                    Next Step <span class="opacity-40 text-xs font-normal">SPACE</span>
+                <button id="nextStepBtn" class="bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] text-[var(--text-main)] border border-[var(--border)] px-4 py-2 rounded text-sm font-bold flex items-center gap-2 shadow-sm">
+                    Step <span class="opacity-40 text-xs font-normal">SPACE</span>
                 </button>
             </div>
         </div>
 
-        <!-- Output Sidebar -->
         <aside class="w-80 sidebar flex flex-col">
             <div class="p-4 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--bg-sidebar)]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--text-muted)]"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-                <h2 class="font-bold text-sm uppercase tracking-wider text-[var(--text-muted)]">Console Output</h2>
+                <h2 class="font-bold text-sm uppercase tracking-wider text-[var(--text-muted)]">Console</h2>
             </div>
             <div id="consoleOutput" class="flex-1 p-4 bg-[var(--console-bg)] text-sm font-mono overflow-auto custom-scrollbar">
-                <div class="text-gray-500 italic">Program output will appear here...</div>
+                <div class="text-gray-500 italic">No output yet.</div>
             </div>
 
             <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-app)]">
-                <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] mb-2">Scopes Captured</h3>
-                <div id="loopInfo" class="text-xs text-[var(--text-muted)] space-y-1">Waiting...</div>
+                <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] mb-2">Live Stack</h3>
+                <div id="loopInfo" class="space-y-1"></div>
             </div>
         </aside>
     </main>
 
     <script>
-        class LoopInterpreter {
+        class Interpreter {
             constructor() {
                 this.steps = [];
                 this.lines = [];
+                this.scope = {};
+                this.console = [];
+                this.maxIterations = 1000;
+                this.iterationCount = 0;
             }
 
             parse(code) {
                 this.steps = [];
-                this.lines = code.trim().split('\n').map(l => l.trimEnd());
+                this.lines = code.split('\n').map(l => l.trimEnd());
+                this.scope = {};
+                this.console = [];
+                this.iterationCount = 0;
                 try {
-                    this.simulateExecution();
+                    this.runBlock(0, this.lines.length);
+                    this.addStep(-1, "Program finished.");
                     return true;
                 } catch (e) {
-                    console.error("Simulation error", e);
-                    return false;
+                    throw e;
                 }
             }
 
-            validateSyntax(code) {
-                const lines = code.trim().split('\n');
-                if (!code.trim()) return "Error: Code area is empty.";
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
+            runBlock(start, end) {
+                let current = start;
+                while (current < end) {
+                    if (this.iterationCount++ > this.maxIterations) throw new Error("Safety Break: Loop too complex or infinite.");
                     
-                    const indent = lines[i].search(/\S/);
-                    const openP = (line.match(/\(/g) || []).length;
-                    const closeP = (line.match(/\)/g) || []).length;
-                    if (openP !== closeP) return `SyntaxError: Line ${i + 1} - Unbalanced parentheses.`;
+                    const lineRaw = this.lines[current];
+                    const lineTrim = lineRaw.trim();
 
-                    if ((line.startsWith('for ') || line.startsWith('while ')) && !line.endsWith(':')) {
-                        return `SyntaxError: Line ${i + 1} - Missing colon ':' at end of loop declaration.`;
+                    if (!lineTrim || lineTrim.startsWith('#')) {
+                        current++;
+                        continue;
                     }
 
-                    if (i > 0 && lines[i-1].trim().endsWith(':')) {
-                        if (indent === 0 || indent <= lines[i-1].search(/\S/)) {
-                            return `IndentationError: Line ${i + 1} - Expected an indented block for the loop body.`;
-                        }
-                    }
-                }
-                return null;
-            }
-
-            simulateExecution() {
-                let currentLineIdx = 0;
-                let iterations = 0;
-                const MAX_ITERATIONS = 500;
-                const scope = {};
-                let currentConsole = [];
-
-                while (currentLineIdx < this.lines.length && iterations < MAX_ITERATIONS) {
-                    let lineRaw = this.lines[currentLineIdx];
-                    let line = lineRaw.trim();
-                    if (!line) { currentLineIdx++; continue; }
-
-                    const forMatch = lineRaw.match(/^((\s*)for\s+)(\w+)(\s+in\s+.+:)$/);
-                    const whileMatch = lineRaw.match(/^((\s*)while\s+)(.+)(:)$/);
+                    // 1. Loop detection
+                    const forMatch = lineRaw.match(/^(\s*)for\s+(\w+)\s+in\s+(.+):/);
+                    const whileMatch = lineRaw.match(/^(\s*)while\s+(.+):/);
 
                     if (forMatch) {
-                        const indent = forMatch[2], varName = forMatch[3], rest = forMatch[4];
-                        const collection = this.evaluateExpression(rest.replace('in ', '').replace(':', '').trim(), scope);
-                        const loopBody = this.getLoopBody(currentLineIdx);
-                        const loopStart = currentLineIdx;
-
+                        const [full, indent, varName, iterableExpr] = forMatch;
+                        const collection = this.evaluate(iterableExpr);
+                        const bodyRange = this.getIndentedBlock(current);
+                        
                         for (const val of collection) {
-                            scope[varName] = val;
-                            const override = `${indent}for <span class="variable-swap value-active">${val}</span>${rest}`;
-                            this.addStep(loopStart, {...scope}, override, [...currentConsole], `Assigning loop iterator ${varName} = ${val}`);
-                            for (const bodyLine of loopBody) {
-                                this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
-                                iterations++;
-                            }
+                            this.scope[varName] = val;
+                            const override = `${indent}for <span class="variable-swap value-active">${val}</span> in ${iterableExpr}:`;
+                            this.addStep(current, `Setting ${varName} to ${val}`, override);
+                            this.runBlock(bodyRange.start, bodyRange.end);
                         }
-                        currentLineIdx = loopStart + loopBody.length + 1;
+                        current = bodyRange.end;
                         continue;
                     }
 
                     if (whileMatch) {
-                        const prefix = whileMatch[1], cond = whileMatch[3], suffix = whileMatch[4];
-                        const loopBody = this.getLoopBody(currentLineIdx);
-                        const loopStart = currentLineIdx;
-
+                        const [full, indent, condExpr] = whileMatch;
+                        const bodyRange = this.getIndentedBlock(current);
+                        
                         while (true) {
-                            const conditionSteps = this.generateSubstitutionSteps(cond, scope);
-                            conditionSteps.forEach(s => {
-                                this.addStep(loopStart, {...scope}, `${prefix}${s}${suffix}`, [...currentConsole], "Checking condition...");
-                            });
+                            const steps = this.getSubstitutionSteps(condExpr);
+                            steps.forEach(s => this.addStep(current, "Checking condition", `${indent}while ${s}:`));
                             
-                            if (this.evaluateCondition(cond, scope) && iterations < MAX_ITERATIONS) {
-                                for (const bodyLine of loopBody) {
-                                    this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
-                                    iterations++;
-                                }
+                            if (this.evaluate(condExpr)) {
+                                this.runBlock(bodyRange.start, bodyRange.end);
                             } else break;
                         }
-                        currentLineIdx = loopStart + loopBody.length + 1;
+                        current = bodyRange.end;
                         continue;
                     }
 
-                    this.processLine(lineRaw, currentLineIdx, scope, currentConsole);
-                    currentLineIdx++;
-                    iterations++;
+                    // 2. Assignment / Print
+                    this.processSimpleLine(lineRaw, current);
+                    current++;
                 }
-                this.addStep(-1, {...scope}, null, [...currentConsole], "Execution Finished");
             }
 
-            processLine(lineRaw, idx, scope, currentConsole) {
-                const am = lineRaw.match(/^((\s*)(\w+)\s*(\+|-|\*|\/|)?=\s*)(.*)$/);
-                if (am) {
-                    const prefix = am[1], indent = am[2], varName = am[3], op = am[4], expr = am[5];
+            processSimpleLine(lineRaw, idx) {
+                const indent = lineRaw.match(/^\s*/)[0];
+                const line = lineRaw.trim();
+
+                // Assignment
+                const assignMatch = line.match(/^(\w+)\s*(\+|-|\*|\/|)?=\s*(.*)$/);
+                if (assignMatch) {
+                    const [f, varName, op, expr] = assignMatch;
+                    const steps = this.getSubstitutionSteps(expr);
+                    steps.forEach(s => this.addStep(idx, "Calculating expression", `${indent}${varName} ${op || ''}= ${s}`));
                     
-                    if (op) {
-                        const currentVal = scope[varName] || 0;
-                        const expandedRhs = `${varName} ${op} ${expr}`;
-                        const substitutionSteps = this.generateSubstitutionSteps(expandedRhs, scope);
-                        substitutionSteps.forEach(s => {
-                            this.addStep(idx, {...scope}, `${indent}${varName} = ${s}`, [...currentConsole], `Incrementing ${varName}...`);
-                        });
-                        const rhsVal = this.evaluateExpression(expr, scope);
-                        if (op === '+') scope[varName] = currentVal + rhsVal;
-                        else if (op === '-') scope[varName] = currentVal - rhsVal;
-                        else if (op === '*') scope[varName] = currentVal * rhsVal;
-                        this.addStep(idx, {...scope}, `${indent}${varName} = <span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `Result: ${varName} is now ${scope[varName]}`);
-                    } else {
-                        const rhsSteps = this.generateSubstitutionSteps(expr, scope);
-                        rhsSteps.forEach(s => {
-                            this.addStep(idx, {...scope}, `${prefix}${s}`, [...currentConsole], "Substituting values...");
-                        });
-                        const val = this.evaluateExpression(expr, scope);
-                        scope[varName] = val;
-                        this.addStep(idx, {...scope}, `${prefix}<span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `${varName} is now ${scope[varName]}`);
+                    const val = this.evaluate(expr);
+                    if (!op) this.scope[varName] = val;
+                    else {
+                        const old = this.scope[varName] || 0;
+                        if (op === '+') this.scope[varName] = old + val;
+                        else if (op === '-') this.scope[varName] = old - val;
+                        else if (op === '*') this.scope[varName] = old * val;
                     }
+                    this.addStep(idx, `Updated ${varName}`, `${indent}${varName} = <span class="variable-swap value-active">${this.scope[varName]}</span>`);
                     return;
                 }
 
-                const pm = lineRaw.match(/^((\s*)print\()(.+)(\))$/);
-                if (pm) {
-                    const prefix = pm[1], expr = pm[3], suffix = pm[4];
-                    const val = this.evaluateExpression(expr, scope);
-                    const argSteps = this.generateSubstitutionSteps(expr, scope);
-                    argSteps.forEach(s => {
-                        this.addStep(idx, {...scope}, `${prefix}${s}${suffix}`, [...currentConsole], "Substituting print argument...");
-                    });
-                    currentConsole.push(String(val));
-                    this.addStep(idx, {...scope}, `${prefix}${val}${suffix}`, [...currentConsole], `Output: ${val}`);
+                // Print
+                const printMatch = line.match(/^print\((.*)\)$/);
+                if (printMatch) {
+                    const expr = printMatch[1];
+                    const steps = this.getSubstitutionSteps(expr);
+                    steps.forEach(s => this.addStep(idx, "Evaluating output", `${indent}print(${s})`));
+                    
+                    const val = this.evaluate(expr);
+                    this.addStep(idx, "Preparing to print", `${indent}print(<span class="variable-swap value-active">${val}</span>)`);
+                    this.console.push(String(val));
+                    this.addStep(idx, `Printed: ${val}`);
                     return;
                 }
 
-                this.addStep(idx, {...scope}, null, [...currentConsole]);
+                this.addStep(idx);
             }
 
-            generateSubstitutionSteps(expr, scope) {
-                const steps = [];
-                const tokens = expr.split(/(\W+)/);
-                const varTokensIndices = [];
-                tokens.forEach((t, i) => {
-                    if (t.match(/^[a-zA-Z_]\w*$/) && scope.hasOwnProperty(t)) varTokensIndices.push(i);
-                });
-                if (varTokensIndices.length === 0) return [];
-
-                for (let i = 0; i < varTokensIndices.length; i++) {
-                    const currentTokens = [...tokens];
-                    for (let j = 0; j <= i; j++) {
-                        const idx = varTokensIndices[j];
-                        const varName = tokens[idx];
-                        currentTokens[idx] = `<span class="variable-swap value-active">${scope[varName]}</span>`;
-                    }
-                    steps.push(currentTokens.join(''));
+            getIndentedBlock(lineIdx) {
+                const baseIndent = this.lines[lineIdx].search(/\S/);
+                let end = lineIdx + 1;
+                while (end < this.lines.length) {
+                    const line = this.lines[end];
+                    if (line.trim() && line.search(/\S/) <= baseIndent) break;
+                    end++;
                 }
-                return steps;
+                return { start: lineIdx + 1, end };
             }
 
-            getLoopBody(startIndex) {
-                const body = [];
-                const startIndent = this.lines[startIndex].search(/\S/);
-                for (let i = startIndex + 1; i < this.lines.length; i++) {
-                    if (this.lines[i].trim() === "") continue;
-                    const curIndent = this.lines[i].search(/\S/);
-                    if (curIndent > startIndent) body.push({ index: i, text: this.lines[i] });
-                    else break;
-                }
-                return body;
-            }
-
-            evaluateExpression(expr, scope) {
+            evaluate(expr) {
                 expr = expr.trim();
-                const r1 = expr.match(/^range\((\d+)\)$/);
-                if (r1) return Array.from({length: parseInt(r1[1])}, (_, i) => i);
-                const r2 = expr.match(/^range\((\d+),\s*(\d+)\)$/);
-                if (r2) return Array.from({length: parseInt(r2[2]) - parseInt(r2[1])}, (_, i) => i + parseInt(r2[1]));
-                if (expr.startsWith('[') && expr.endsWith(']')) {
-                    return expr.slice(1, -1).split(',').map(v => {
-                        v = v.trim();
-                        return isNaN(v) ? v.replace(/['"]/g, '') : Number(v);
-                    });
+                // Range
+                const rMatch = expr.match(/^range\((.*)\)$/);
+                if (rMatch) {
+                    const args = rMatch[1].split(',').map(a => this.evaluate(a));
+                    if (args.length === 1) return Array.from({length: args[0]}, (_, i) => i);
+                    if (args.length === 2) return Array.from({length: args[1] - args[0]}, (_, i) => i + args[0]);
                 }
+                // f-strings
+                if (expr.startsWith('f"') || expr.startsWith("f'")) {
+                    let template = expr.slice(2, -1);
+                    return template.replace(/\{([^}]+)\}/g, (_, inner) => this.evaluate(inner));
+                }
+                // Literals/Strings
+                if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+                    return expr.slice(1, -1);
+                }
+                // Math / Vars
                 try {
                     let proc = expr;
-                    const keys = Object.keys(scope).sort((a,b) => b.length - a.length);
-                    for (const k of keys) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), scope[k]); }
+                    const keys = Object.keys(this.scope).sort((a,b) => b.length - a.length);
+                    for (const k of keys) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), this.scope[k]); }
                     return Function(`"use strict"; return (${proc})`)();
                 } catch (e) { return expr; }
             }
 
-            evaluateCondition(cond, scope) {
-                try {
-                    let proc = cond;
-                    const keys = Object.keys(scope).sort((a,b) => b.length - a.length);
-                    for (const k of keys) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), scope[k]); }
-                    return !!Function(`"use strict"; return (${proc})`)();
-                } catch (e) { return false; }
+            getSubstitutionSteps(expr) {
+                const steps = [];
+                const tokens = expr.split(/(\W+)/);
+                const vars = tokens.map((t, i) => t.match(/^[a-zA-Z_]\w*$/) && this.scope.hasOwnProperty(t) ? i : -1).filter(i => i !== -1);
+                
+                for (let i = 0; i < vars.length; i++) {
+                    const current = [...tokens];
+                    for (let j = 0; j <= i; j++) {
+                        const idx = vars[j];
+                        current[idx] = `<span class="variable-swap value-active">${this.scope[tokens[idx]]}</span>`;
+                    }
+                    steps.push(current.join(''));
+                }
+                return steps;
             }
 
-            addStep(lineIdx, vars, lineOverride, output, message) {
-                this.steps.push({ lineIndex: lineIdx, vars, lineOverride, output, message });
+            addStep(lineIdx, message = "", override = null) {
+                this.steps.push({
+                    lineIndex: lineIdx,
+                    vars: {...this.scope},
+                    output: [...this.console],
+                    message,
+                    override
+                });
             }
         }
 
-        const interpreter = new LoopInterpreter();
-        let currentIdx = 0;
-        let isExecuting = false;
+        const engine = new Interpreter();
+        let currentStep = 0;
+        let running = false;
 
-        const html = document.documentElement;
-        const themeToggle = document.getElementById('themeToggle');
-        const sunIcon = document.getElementById('sunIcon');
-        const moonIcon = document.getElementById('moonIcon');
-        const startBtn = document.getElementById('startBtn');
-        const startBtnText = document.getElementById('startBtnText');
-        const resetBtn = document.getElementById('resetBtn');
-        const codeInput = document.getElementById('codeInput');
-        const editorPane = document.getElementById('editorPane');
-        const visualPane = document.getElementById('visualPane');
-        const codeDisplay = document.getElementById('codeDisplay');
-        const consoleOutput = document.getElementById('consoleOutput');
-        const stepCounter = document.getElementById('stepCounter');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const startupPopup = document.getElementById('startupPopup');
-        const popupContent = document.getElementById('popupContent');
-        const errorModal = document.getElementById('errorModal');
-        const errorMessage = document.getElementById('errorMessage');
-
-        let countdownValue = 5;
-        let countdownInterval;
-
-        const enterApp = () => {
-            if (startupPopup.classList.contains('hidden')) return;
-            startupPopup.classList.add('hidden');
-            clearInterval(countdownInterval);
-            window.removeEventListener('keydown', handleGlobalKey);
+        const el = {
+            html: document.documentElement,
+            editor: document.getElementById('codeInput'),
+            display: document.getElementById('codeDisplay'),
+            console: document.getElementById('consoleOutput'),
+            stack: document.getElementById('loopInfo'),
+            counter: document.getElementById('stepCounter'),
+            instr: document.getElementById('instruction'),
+            visualPane: document.getElementById('visualPane'),
+            startBtn: document.getElementById('startBtn'),
+            startBtnText: document.getElementById('startBtnText'),
+            resetBtn: document.getElementById('resetBtn'),
+            nextBtn: document.getElementById('nextStepBtn'),
+            themeBtn: document.getElementById('themeToggle'),
+            sun: document.getElementById('sunIcon'),
+            moon: document.getElementById('moonIcon'),
+            errorModal: document.getElementById('errorModal'),
+            errorMsg: document.getElementById('errorMessage')
         };
-
-        const handleGlobalKey = (e) => {
-            if (!startupPopup.classList.contains('hidden')) {
-                enterApp();
-            }
-        };
-
-        const startCountdown = () => {
-            const timerEl = document.getElementById('startupTimer');
-            window.addEventListener('keydown', handleGlobalKey);
-            countdownInterval = setInterval(() => {
-                countdownValue--;
-                if (timerEl) timerEl.textContent = countdownValue;
-                if (countdownValue <= 0) {
-                    enterApp();
-                }
-            }, 1000);
-        };
-
-        const clearLoading = () => {
-            if (loadingOverlay.classList.contains('hidden')) return;
-            loadingOverlay.classList.add('opacity-0');
-            setTimeout(() => {
-                loadingOverlay.classList.add('hidden');
-                startupPopup.classList.remove('hidden');
-                setTimeout(() => {
-                    popupContent.classList.remove('scale-90');
-                    startCountdown();
-                }, 50);
-            }, 600);
-        };
-
-        if (document.readyState === 'complete') clearLoading();
-        else {
-            window.addEventListener('load', clearLoading);
-            setTimeout(clearLoading, 3000); 
-        }
-
-        document.getElementById('closeStartup').addEventListener('click', enterApp);
-        document.getElementById('closeError').addEventListener('click', () => errorModal.classList.add('hidden'));
-
-        themeToggle.addEventListener('click', () => {
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            sunIcon.classList.toggle('hidden');
-            moonIcon.classList.toggle('hidden');
-        });
-
-        codeInput.addEventListener('input', () => {
-            if (isExecuting) {
-                startBtnText.textContent = "Sync Changes";
-                startBtn.classList.remove('bg-[#1f883d]');
-                startBtn.classList.add('bg-[#0969da]');
-            }
-        });
-
-        // Intercept Tab key in textarea safely using insertText to preserve undo stack
-        codeInput.addEventListener('keydown', (e) => {
-            // General Shortcuts
-            if ((e.ctrlKey || e.metaKey)) {
-                if (e.key === 's' || e.key === 'Enter') {
-                    e.preventDefault();
-                    start();
-                    return;
-                }
-            }
-
-            if (e.key === 'Escape') {
-                if (isExecuting) reset();
-                errorModal.classList.add('hidden');
-                return;
-            }
-
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                // Using insertText command preserves browser undo stack (Ctrl+Z)
-                if (!document.execCommand('insertText', false, '    ')) {
-                    // Fallback for browsers that might not support insertText on textarea
-                    const start = codeInput.selectionStart;
-                    const end = codeInput.selectionEnd;
-                    codeInput.value = codeInput.value.substring(0, start) + "    " + codeInput.value.substring(end);
-                    codeInput.selectionStart = codeInput.selectionEnd = start + 4;
-                }
-            }
-        });
 
         function start() {
-            const code = codeInput.value;
-            const error = interpreter.validateSyntax(code);
-            if (error) {
-                errorMessage.textContent = error;
-                errorModal.classList.remove('hidden');
-                return;
-            }
-            if (interpreter.parse(code)) {
-                isExecuting = true;
-                currentIdx = 0;
-                visualPane.classList.remove('hidden');
-                startBtnText.textContent = "Re-start";
-                startBtn.classList.remove('bg-[#0969da]');
-                startBtn.classList.add('bg-[#1f883d]');
-                resetBtn.classList.remove('hidden');
-                renderCode();
+            try {
+                engine.parse(el.editor.value);
+                running = true;
+                currentStep = 0;
+                el.visualPane.classList.remove('hidden');
+                el.resetBtn.classList.remove('hidden');
+                el.startBtnText.textContent = "Restart";
+                renderBaseCode();
                 applyStep(0);
+            } catch (e) {
+                el.errorMsg.textContent = e.message;
+                el.errorModal.classList.remove('hidden');
             }
         }
 
-        function reset() {
-            isExecuting = false;
-            visualPane.classList.add('hidden');
-            startBtnText.textContent = "Start";
-            startBtn.classList.remove('bg-[#0969da]');
-            startBtn.classList.add('bg-[#1f883d]');
-            resetBtn.classList.add('hidden');
-            consoleOutput.innerHTML = '<div class="text-gray-500 italic">Program output will appear here...</div>';
-            document.getElementById('loopInfo').textContent = "Waiting...";
-        }
-
-        function renderCode() {
-            codeDisplay.innerHTML = '';
-            interpreter.lines.forEach((line, i) => {
-                const div = document.createElement('div');
-                div.className = 'line-container px-4 py-1 rounded transition-colors flex';
-                div.id = `line-${i}`;
-                div.innerHTML = `<span class="w-8 text-[var(--text-muted)] text-sm mt-1 shrink-0">${i+1}</span><div class="line-content flex-1 whitespace-pre">${line}</div>`;
-                codeDisplay.appendChild(div);
-            });
+        function renderBaseCode() {
+            el.display.innerHTML = engine.lines.map((line, i) => `
+                <div class="code-line-wrapper" id="l-${i}">
+                    <div class="line-number">${i + 1}</div>
+                    <div class="line-content">${line}</div>
+                </div>
+            `).join('');
         }
 
         function applyStep(idx) {
-            const step = interpreter.steps[idx];
+            const step = engine.steps[idx];
             if (!step) return;
 
-            document.querySelectorAll('.line-container').forEach((l, i) => {
-                l.classList.remove('line-highlight');
-                const content = l.querySelector('.line-content');
-                if (content) content.innerHTML = interpreter.lines[i];
+            document.querySelectorAll('.code-line-wrapper').forEach((div, i) => {
+                div.classList.remove('line-highlight');
+                div.querySelector('.line-content').innerHTML = engine.lines[i];
             });
 
-            const activeLine = document.getElementById(`line-${step.lineIndex}`);
-            if (activeLine) {
-                activeLine.classList.add('line-highlight');
-                activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                if (step.lineOverride) activeLine.querySelector('.line-content').innerHTML = step.lineOverride;
+            if (step.lineIndex !== -1) {
+                const lineDiv = document.getElementById(`l-${step.lineIndex}`);
+                if (lineDiv) {
+                    lineDiv.classList.add('line-highlight');
+                    lineDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (step.override) lineDiv.querySelector('.line-content').innerHTML = step.override;
+                }
             }
 
-            stepCounter.textContent = `Step ${idx+1} / ${interpreter.steps.length}`;
-            consoleOutput.innerHTML = step.output.length > 0 
-                ? step.output.map(o => `<div class="mb-1 text-[var(--accent)]">> ${o}</div>`).join('')
-                : '<div class="text-gray-500 italic">No output yet...</div>';
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            el.counter.textContent = `Step ${idx + 1} / ${engine.steps.length}`;
+            el.instr.textContent = step.message || "Executing...";
+            el.console.innerHTML = step.output.length ? step.output.map(o => `<div>> ${o}</div>`).join('') : '<div class="text-gray-500 italic">No output yet.</div>';
+            el.console.scrollTop = el.console.scrollHeight;
 
-            document.getElementById('instruction').textContent = step.message || "Press Spacebar to step...";
-            
-            const varHtml = Object.keys(step.vars).length 
-                ? Object.entries(step.vars).map(([k,v]) => `
-                    <div class="flex justify-between items-center bg-[var(--bg-app)] border border-[var(--border)] p-2 rounded shadow-sm">
-                        <span class="font-bold text-[var(--token-var)]">${k}</span>
-                        <span class="text-[var(--token-val)]">${JSON.stringify(v)}</span>
-                    </div>`).join('')
-                : 'No variables active';
-                
-            document.getElementById('loopInfo').innerHTML = `
-                <div class="mb-2 flex justify-between"><span>Line Index:</span><span class="font-bold">${step.lineIndex + 1}</span></div>
-                <div class="space-y-2 mt-4">
-                    ${varHtml}
+            el.stack.innerHTML = Object.entries(step.vars).map(([k, v]) => `
+                <div class="flex justify-between text-sm bg-[var(--bg-sidebar)] p-2 rounded border border-[var(--border)]">
+                    <span class="font-bold text-[var(--token-var)]">${k}</span>
+                    <span class="text-[var(--token-val)]">${JSON.stringify(v)}</span>
                 </div>
-            `;
+            `).join('');
         }
 
-        function next() { if (isExecuting && currentIdx < interpreter.steps.length - 1) applyStep(++currentIdx); }
+        function next() {
+            if (!running) return;
+            if (currentStep < engine.steps.length - 1) applyStep(++currentStep);
+            else el.instr.textContent = "Finished!";
+        }
 
-        startBtn.addEventListener('click', start);
-        resetBtn.addEventListener('click', reset);
-        document.getElementById('nextStepBtn').addEventListener('click', next);
-        window.addEventListener('keydown', e => { if (e.code === 'Space' && isExecuting) { e.preventDefault(); next(); } });
+        el.startBtn.addEventListener('click', start);
+        el.nextBtn.addEventListener('click', next);
+        el.resetBtn.addEventListener('click', () => location.reload());
+        el.themeBtn.addEventListener('click', () => {
+            const dark = el.html.getAttribute('data-theme') === 'dark';
+            el.html.setAttribute('data-theme', dark ? 'light' : 'dark');
+            el.sun.classList.toggle('hidden');
+            el.moon.classList.toggle('hidden');
+        });
+        document.getElementById('closeError').addEventListener('click', () => el.errorModal.classList.add('hidden'));
+
+        el.editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                document.execCommand('insertText', false, '    ');
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') start();
+        });
+
+        window.addEventListener('keydown', e => { if (e.code === 'Space' && running) { e.preventDefault(); next(); } });
+
+        // Auto-loading logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('opacity-0', 'hidden');
+                const startup = document.getElementById('startupPopup');
+                startup.classList.remove('hidden');
+                let count = 5;
+                const timer = setInterval(() => {
+                    document.getElementById('startupTimer').textContent = --count;
+                    if (count <= 0) { startup.classList.add('hidden'); clearInterval(timer); }
+                }, 1000);
+                const close = () => { startup.classList.add('hidden'); clearInterval(timer); window.removeEventListener('keydown', close); };
+                document.getElementById('closeStartup').addEventListener('click', close);
+                window.addEventListener('keydown', close);
+            }, 800);
+        });
     </script>
 </body>
 </html>
