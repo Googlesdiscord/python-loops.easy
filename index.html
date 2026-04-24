@@ -540,6 +540,22 @@ while i < 4:
             }
         });
 
+        // Intercept Tab key in textarea
+        codeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = codeInput.selectionStart;
+                const end = codeInput.selectionEnd;
+
+                // Insert 4 spaces
+                codeInput.value = codeInput.value.substring(0, start) +
+                    "    " + codeInput.value.substring(end);
+
+                // Put caret at right position
+                codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+            }
+        });
+
         function start() {
             const code = codeInput.value;
             const error = interpreter.validateSyntax(code);
