@@ -102,10 +102,17 @@
         }
 
         #editorContainer {
-            position: relative;
-            flex: 1;
             display: flex;
             flex-direction: column;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .code-area-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
             overflow: hidden;
         }
 
@@ -119,12 +126,15 @@
             font-size: 1.125rem;
             line-height: 1.75rem;
             font-family: 'Fira Code', monospace;
+            border: none;
+            outline: none;
         }
 
         #codeDisplay {
             overflow-y: auto;
             background-color: var(--bg-app);
             z-index: 5;
+            pointer-events: none;
         }
 
         .code-line-wrapper {
@@ -151,13 +161,11 @@
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- Loading Screen -->
     <div id="loadingOverlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="spinner mb-4"></div>
         <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse uppercase">Initializing...</div>
     </div>
 
-    <!-- Startup Popup -->
     <div id="startupPopup" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] px-4">
         <div class="bg-white dark:bg-[#161b22] border border-[#d0d7de] dark:border-[#30363d] rounded-xl p-8 max-w-sm w-full shadow-2xl text-center scale-90 transition-transform duration-300" id="popupContent">
             <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -176,19 +184,18 @@
         </div>
     </div>
 
-    <!-- Error Modal -->
     <div id="errorModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[120] px-4">
         <div class="bg-white dark:bg-[#161b22] border border-red-500 rounded-xl p-6 max-w-md w-full shadow-2xl">
             <div class="flex items-center gap-3 text-red-500 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h2 class="text-xl font-bold">Error</h2>
+                <h2 class="text-xl font-bold">Execution Error</h2>
             </div>
             <p id="errorMessage" class="text-gray-600 dark:text-gray-400 mb-6 text-sm font-mono bg-gray-100 dark:bg-gray-800 p-3 rounded break-words"></p>
             <button id="closeError" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-bold transition-colors">Close</button>
         </div>
     </div>
 
-    <header class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
+    <header class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-sidebar)] shrink-0">
         <div class="flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
             <h1 class="text-xl font-bold tracking-tight">PyLoop<span class="text-[var(--accent)]">Visualizer</span></h1>
@@ -203,11 +210,15 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     <span id="startBtnText">Start</span>
                 </button>
-                <button id="nextStepBtn" class="hidden bg-[var(--accent)] hover:opacity-90 text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
-                    Next Step
-                </button>
-                <button id="resetBtn" class="hidden bg-[var(--bg-sidebar)] hover:bg-[var(--border)] text-[var(--text-main)] border border-[var(--border)] px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <div class="flex gap-1" id="stepButtons" style="display: none;">
+                    <button id="prevStepBtn" class="bg-[var(--bg-sidebar)] hover:bg-[#ebedef] dark:hover:bg-[#21262d] text-[var(--text-main)] border border-[var(--border)] px-4 py-2 rounded-md font-medium transition-all shadow-sm">
+                        Prev
+                    </button>
+                    <button id="nextStepBtn" class="bg-[var(--accent)] hover:opacity-90 text-white px-4 py-2 rounded-md font-medium transition-all shadow-sm">
+                        Next
+                    </button>
+                </div>
+                <button id="resetBtn" class="hidden bg-[var(--bg-sidebar)] hover:bg-[#ebedef] dark:hover:bg-[#21262d] text-[var(--text-main)] border border-[var(--border)] px-6 py-2 rounded-md font-medium transition-all shadow-sm">
                     Reset
                 </button>
             </div>
@@ -216,22 +227,21 @@
 
     <main class="flex-1 flex overflow-hidden">
         <div id="editorContainer">
-            <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] flex justify-between items-center z-10 relative">
+            <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] flex justify-between items-center shrink-0">
                 <span>main.py</span>
-                <span id="stepCounter" class="hidden text-[var(--accent)]">Step 0 / 0</span>
+                <span id="stepCounter" style="display: none;" class="text-[var(--accent)]">Step 0 / 0</span>
             </div>
             
-            <textarea id="codeInput" spellcheck="false" class="bg-[var(--bg-editor)] text-[var(--text-main)] focus:outline-none resize-none custom-scrollbar" placeholder="Enter loop...">for i in range(1, 4):
+            <div class="code-area-wrapper">
+                <textarea id="codeInput" spellcheck="false" class="bg-[var(--bg-editor)] text-[var(--text-main)] resize-none custom-scrollbar" placeholder="Enter loop...">for i in range(1, 4):
     for j in range(1, 4):
         product = i * j
-        print(f"{i} * {j} = {product}")
-    
-    print("--- End of Row ---")</textarea>
-            
-            <div id="codeDisplay" class="hidden custom-scrollbar"></div>
+        print(i, j)</textarea>
+                <div id="codeDisplay" class="hidden custom-scrollbar"></div>
+            </div>
 
-            <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)] z-10 relative mt-auto">
-                <span id="instruction">💡 Tip: Use <kbd class="px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Tab</kbd> to indent. <kbd class="px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Ctrl + Enter</kbd> to run.</span>
+            <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)] shrink-0">
+                <span id="instruction">💡 Tip: Use <kbd class="px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Space</kbd> for Next, <kbd class="px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Shift+Space</kbd> for Prev.</span>
             </div>
         </div>
 
@@ -258,7 +268,8 @@
                 this.lines = [];
                 this.scope = {};
                 this.console = [];
-                this.maxIterations = 1000;
+                this.lineOverrides = {}; 
+                this.maxIterations = 2000;
                 this.iterationCount = 0;
             }
 
@@ -267,6 +278,7 @@
                 this.lines = code.split('\n').map(l => l.trimEnd());
                 this.scope = {};
                 this.console = [];
+                this.lineOverrides = {};
                 this.iterationCount = 0;
                 try {
                     this.runBlock(0, this.lines.length);
@@ -280,48 +292,41 @@
             runBlock(start, end) {
                 let current = start;
                 while (current < end) {
-                    if (this.iterationCount++ > this.maxIterations) throw new Error("Safety Break: Loop too complex or infinite.");
-                    
+                    if (this.iterationCount++ > this.maxIterations) throw new Error("Safety Break: Loop too complex.");
                     const lineRaw = this.lines[current];
-                    const lineTrim = lineRaw.trim();
-
-                    if (!lineTrim || lineTrim.startsWith('#')) {
-                        current++;
-                        continue;
-                    }
+                    if (!lineRaw.trim() || lineRaw.trim().startsWith('#')) { current++; continue; }
 
                     const forMatch = lineRaw.match(/^(\s*)for\s+(\w+)\s+in\s+(.+):/);
                     const whileMatch = lineRaw.match(/^(\s*)while\s+(.+):/);
 
                     if (forMatch) {
-                        const [full, indent, varName, iterableExpr] = forMatch;
+                        const [f, indent, varName, iterableExpr] = forMatch;
                         const collection = this.evaluate(iterableExpr);
                         const bodyRange = this.getIndentedBlock(current);
-                        
                         for (const val of collection) {
+                            this.clearOverridesInRange(bodyRange.start, bodyRange.end);
                             this.scope[varName] = val;
-                            const override = `${indent}for <span class="variable-swap value-active">${val}</span> in ${iterableExpr}:`;
-                            this.addStep(current, `Setting ${varName} to ${val}`, override);
+                            this.lineOverrides[current] = `${indent}for <span class="variable-swap value-active">${val}</span> in ${iterableExpr}:`;
+                            this.addStep(current, `Iterator ${varName} is ${val}`);
                             this.runBlock(bodyRange.start, bodyRange.end);
                         }
-                        current = bodyRange.end;
-                        continue;
+                        current = bodyRange.end; continue;
                     }
 
                     if (whileMatch) {
-                        const [full, indent, condExpr] = whileMatch;
+                        const [f, indent, condExpr] = whileMatch;
                         const bodyRange = this.getIndentedBlock(current);
-                        
                         while (true) {
+                            this.clearOverridesInRange(bodyRange.start, bodyRange.end);
                             const steps = this.getSubstitutionSteps(condExpr);
-                            steps.forEach(s => this.addStep(current, "Checking condition", `${indent}while ${s}:`));
-                            
-                            if (this.evaluate(condExpr)) {
-                                this.runBlock(bodyRange.start, bodyRange.end);
-                            } else break;
+                            steps.forEach(s => {
+                                this.lineOverrides[current] = `${indent}while ${s}:`;
+                                this.addStep(current, "Checking condition");
+                            });
+                            if (this.evaluate(condExpr)) this.runBlock(bodyRange.start, bodyRange.end);
+                            else break;
                         }
-                        current = bodyRange.end;
-                        continue;
+                        current = bodyRange.end; continue;
                     }
 
                     this.processSimpleLine(lineRaw, current);
@@ -332,13 +337,15 @@
             processSimpleLine(lineRaw, idx) {
                 const indent = lineRaw.match(/^\s*/)[0];
                 const line = lineRaw.trim();
-
                 const assignMatch = line.match(/^(\w+)\s*(\+|-|\*|\/|)?=\s*(.*)$/);
+                
                 if (assignMatch) {
                     const [f, varName, op, expr] = assignMatch;
                     const steps = this.getSubstitutionSteps(expr);
-                    steps.forEach(s => this.addStep(idx, "Calculating expression", `${indent}${varName} ${op || ''}= ${s}`));
-                    
+                    steps.forEach(s => {
+                        this.lineOverrides[idx] = `${indent}${varName} ${op || ''}= ${s}`;
+                        this.addStep(idx, "Calculating expression");
+                    });
                     const val = this.evaluate(expr);
                     if (!op) this.scope[varName] = val;
                     else {
@@ -347,23 +354,27 @@
                         else if (op === '-') this.scope[varName] = old - val;
                         else if (op === '*') this.scope[varName] = old * val;
                     }
-                    this.addStep(idx, `Updated ${varName}`, `${indent}${varName} = <span class="variable-swap value-active">${this.scope[varName]}</span>`);
+                    this.lineOverrides[idx] = `${indent}${varName} = <span class="variable-swap value-active">${this.scope[varName]}</span>`;
+                    this.addStep(idx, `${varName} assigned`);
                     return;
                 }
 
+                // Enhanced Print Logic for multiple arguments
                 const printMatch = line.match(/^print\((.*)\)$/);
                 if (printMatch) {
                     const expr = printMatch[1];
                     const steps = this.getSubstitutionSteps(expr);
-                    steps.forEach(s => this.addStep(idx, "Evaluating output", `${indent}print(${s})`));
+                    steps.forEach(s => {
+                        this.lineOverrides[idx] = `${indent}print(${s})`;
+                        this.addStep(idx, "Evaluating arguments");
+                    });
                     
-                    const val = this.evaluate(expr);
-                    this.addStep(idx, "Preparing to print", `${indent}print(<span class="variable-swap value-active">${val}</span>)`);
-                    this.console.push(String(val));
-                    this.addStep(idx, `Printed: ${val}`);
+                    // Evaluate arguments individually to join them like Python's print(a, b)
+                    const args = expr.split(',').map(arg => this.evaluate(arg.trim()));
+                    this.console.push(args.join(' '));
+                    this.addStep(idx, "Output sent to console");
                     return;
                 }
-
                 this.addStep(idx);
             }
 
@@ -371,11 +382,14 @@
                 const baseIndent = this.lines[lineIdx].search(/\S/);
                 let end = lineIdx + 1;
                 while (end < this.lines.length) {
-                    const line = this.lines[end];
-                    if (line.trim() && line.search(/\S/) <= baseIndent) break;
+                    if (this.lines[end].trim() && this.lines[end].search(/\S/) <= baseIndent) break;
                     end++;
                 }
                 return { start: lineIdx + 1, end };
+            }
+
+            clearOverridesInRange(start, end) {
+                for (let i = start; i < end; i++) delete this.lineOverrides[i];
             }
 
             evaluate(expr) {
@@ -390,13 +404,11 @@
                     let template = expr.slice(2, -1);
                     return template.replace(/\{([^}]+)\}/g, (_, inner) => this.evaluate(inner));
                 }
-                if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
-                    return expr.slice(1, -1);
-                }
+                if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) return expr.slice(1, -1);
                 try {
                     let proc = expr;
                     const keys = Object.keys(this.scope).sort((a,b) => b.length - a.length);
-                    for (const k of keys) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), this.scope[k]); }
+                    for (const k of keys) proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), this.scope[k]);
                     return Function(`"use strict"; return (${proc})`)();
                 } catch (e) { return expr; }
             }
@@ -405,7 +417,6 @@
                 const steps = [];
                 const tokens = expr.split(/(\W+)/);
                 const vars = tokens.map((t, i) => t.match(/^[a-zA-Z_]\w*$/) && this.scope.hasOwnProperty(t) ? i : -1).filter(i => i !== -1);
-                
                 for (let i = 0; i < vars.length; i++) {
                     const current = [...tokens];
                     for (let j = 0; j <= i; j++) {
@@ -417,14 +428,8 @@
                 return steps;
             }
 
-            addStep(lineIdx, message = "", override = null) {
-                this.steps.push({
-                    lineIndex: lineIdx,
-                    vars: {...this.scope},
-                    output: [...this.console],
-                    message,
-                    override
-                });
+            addStep(lineIdx, message = "") {
+                this.steps.push({ lineIndex: lineIdx, vars: {...this.scope}, output: [...this.console], message, overrides: {...this.lineOverrides} });
             }
         }
 
@@ -444,9 +449,8 @@
             startBtnText: document.getElementById('startBtnText'),
             resetBtn: document.getElementById('resetBtn'),
             nextBtn: document.getElementById('nextStepBtn'),
-            themeBtn: document.getElementById('themeToggle'),
-            sun: document.getElementById('sunIcon'),
-            moon: document.getElementById('moonIcon'),
+            prevBtn: document.getElementById('prevStepBtn'),
+            stepControls: document.getElementById('stepButtons'),
             errorModal: document.getElementById('errorModal'),
             errorMsg: document.getElementById('errorMessage')
         };
@@ -454,16 +458,13 @@
         function start() {
             try {
                 engine.parse(el.editor.value);
-                running = true;
-                currentStep = 0;
-                
+                running = true; currentStep = 0;
                 el.editor.classList.add('hidden');
                 el.display.classList.remove('hidden');
-                el.counter.classList.remove('hidden');
+                el.counter.style.display = 'block';
+                el.stepControls.style.display = 'flex';
                 el.resetBtn.classList.remove('hidden');
-                el.nextBtn.classList.remove('hidden');
                 el.startBtnText.textContent = "Restart";
-                
                 renderExecutionLines();
                 applyStep(0);
             } catch (e) {
@@ -476,11 +477,11 @@
             running = false;
             el.editor.classList.remove('hidden');
             el.display.classList.add('hidden');
-            el.counter.classList.add('hidden');
+            el.counter.style.display = 'none';
+            el.stepControls.style.display = 'none';
             el.resetBtn.classList.add('hidden');
-            el.nextBtn.classList.add('hidden');
             el.startBtnText.textContent = "Start";
-            el.instr.innerHTML = "💡 Tip: Use <kbd class='px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs'>Tab</kbd> to indent. <kbd class='px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs'>Ctrl + Enter</kbd> to run.";
+            el.instr.innerHTML = "💡 Tip: Use <kbd class='px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs'>Space</kbd> for Next, <kbd class='px-1.5 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs'>Shift+Space</kbd> for Prev.";
             el.console.innerHTML = '<div class="text-gray-500 italic">No output yet.</div>';
             el.stack.innerHTML = "";
         }
@@ -497,84 +498,67 @@
         function applyStep(idx) {
             const step = engine.steps[idx];
             if (!step) return;
-
             document.querySelectorAll('.code-line-wrapper').forEach((div, i) => {
                 div.classList.remove('line-highlight');
-                div.querySelector('.line-content').innerHTML = engine.lines[i];
+                const content = step.overrides[i] !== undefined ? step.overrides[i] : engine.lines[i];
+                div.querySelector('.line-content').innerHTML = content;
             });
-
             if (step.lineIndex !== -1) {
                 const lineDiv = document.getElementById(`l-${step.lineIndex}`);
                 if (lineDiv) {
                     lineDiv.classList.add('line-highlight');
                     lineDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    if (step.override) lineDiv.querySelector('.line-content').innerHTML = step.override;
                 }
             }
-
             el.counter.textContent = `Step ${idx + 1} / ${engine.steps.length}`;
-            el.instr.textContent = step.message || "Press Spacebar to proceed...";
+            el.instr.textContent = step.message || "Executing...";
             el.console.innerHTML = step.output.length ? step.output.map(o => `<div>> ${o}</div>`).join('') : '<div class="text-gray-500 italic">No output yet.</div>';
             el.console.scrollTop = el.console.scrollHeight;
-
-            el.stack.innerHTML = Object.entries(step.vars).map(([k, v]) => `
-                <div class="flex justify-between text-sm bg-[var(--bg-sidebar)] p-2 rounded border border-[var(--border)] animate-in fade-in zoom-in duration-200">
-                    <span class="font-bold text-[var(--token-var)]">${k}</span>
-                    <span class="text-[var(--token-val)]">${JSON.stringify(v)}</span>
-                </div>
-            `).join('');
+            el.stack.innerHTML = Object.entries(step.vars).map(([k, v]) => `<div class="flex justify-between text-sm bg-[var(--bg-sidebar)] p-2 rounded border border-[var(--border)]"><span class="font-bold text-[var(--token-var)]">${k}</span><span class="text-[var(--token-val)]">${JSON.stringify(v)}</span></div>`).join('');
         }
 
-        function next() {
-            if (!running) return;
-            if (currentStep < engine.steps.length - 1) applyStep(++currentStep);
-            else el.instr.textContent = "Execution Finished!";
-        }
+        function next() { if (running && currentStep < engine.steps.length - 1) applyStep(++currentStep); }
+        function prev() { if (running && currentStep > 0) applyStep(--currentStep); }
 
         el.startBtn.addEventListener('click', start);
         el.nextBtn.addEventListener('click', next);
+        el.prevBtn.addEventListener('click', prev);
         el.resetBtn.addEventListener('click', reset);
-        el.themeBtn.addEventListener('click', () => {
+        document.getElementById('themeToggle').addEventListener('click', () => {
             const dark = el.html.getAttribute('data-theme') === 'dark';
             el.html.setAttribute('data-theme', dark ? 'light' : 'dark');
-            el.sun.classList.toggle('hidden');
-            el.moon.classList.toggle('hidden');
+            document.getElementById('sunIcon').classList.toggle('hidden');
+            document.getElementById('moonIcon').classList.toggle('hidden');
         });
         document.getElementById('closeError').addEventListener('click', () => el.errorModal.classList.add('hidden'));
 
         el.editor.addEventListener('keydown', (e) => {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                document.execCommand('insertText', false, '    ');
-            }
+            if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '    '); }
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') start();
         });
 
         window.addEventListener('keydown', e => { 
             if (e.code === 'Space' && running) { 
                 e.preventDefault(); 
-                next(); 
+                if (e.shiftKey) prev(); else next(); 
             } 
             if (e.key === 'Escape' && running) reset();
         });
 
         window.addEventListener('load', () => {
             setTimeout(() => {
-                document.getElementById('loadingOverlay').classList.add('opacity-0');
-                setTimeout(() => {
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    const startup = document.getElementById('startupPopup');
-                    startup.classList.remove('hidden');
-                    let count = 5;
-                    const timer = setInterval(() => {
-                        const timerEl = document.getElementById('startupTimer');
-                        if (timerEl) timerEl.textContent = --count;
-                        if (count <= 0) { startup.classList.add('hidden'); clearInterval(timer); }
-                    }, 1000);
-                    const close = () => { startup.classList.add('hidden'); clearInterval(timer); window.removeEventListener('keydown', close); };
-                    document.getElementById('closeStartup').addEventListener('click', close);
-                    window.addEventListener('keydown', close);
-                }, 500);
+                document.getElementById('loadingOverlay').classList.add('opacity-0', 'hidden');
+                const startup = document.getElementById('startupPopup');
+                startup.classList.remove('hidden');
+                let count = 5;
+                const timer = setInterval(() => {
+                    const timerEl = document.getElementById('startupTimer');
+                    if (timerEl) timerEl.textContent = --count;
+                    if (count <= 0) { startup.classList.add('hidden'); clearInterval(timer); }
+                }, 1000);
+                const close = () => { startup.classList.add('hidden'); clearInterval(timer); window.removeEventListener('keydown', close); };
+                document.getElementById('closeStartup').addEventListener('click', close);
+                window.addEventListener('keydown', close);
             }, 800);
         });
     </script>
