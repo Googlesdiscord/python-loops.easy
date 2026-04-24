@@ -133,6 +133,9 @@
             <button id="closeStartup" class="w-full bg-[#1f883d] hover:bg-[#1a7f37] text-white py-3 rounded-lg font-bold transition-colors">
                 Let's Visualise
             </button>
+            <p class="text-[10px] text-gray-400 mt-4 uppercase tracking-widest font-medium opacity-80">
+                Press any key to enter • Closing in <span id="startupTimer">5</span>s
+            </p>
         </div>
     </div>
 
@@ -472,13 +475,44 @@ while i < 4:
         const errorModal = document.getElementById('errorModal');
         const errorMessage = document.getElementById('errorMessage');
 
+        let countdownValue = 5;
+        let countdownInterval;
+
+        const enterApp = () => {
+            if (startupPopup.classList.contains('hidden')) return;
+            startupPopup.classList.add('hidden');
+            clearInterval(countdownInterval);
+            window.removeEventListener('keydown', handleGlobalKey);
+        };
+
+        const handleGlobalKey = (e) => {
+            if (!startupPopup.classList.contains('hidden')) {
+                enterApp();
+            }
+        };
+
+        const startCountdown = () => {
+            const timerEl = document.getElementById('startupTimer');
+            window.addEventListener('keydown', handleGlobalKey);
+            countdownInterval = setInterval(() => {
+                countdownValue--;
+                if (timerEl) timerEl.textContent = countdownValue;
+                if (countdownValue <= 0) {
+                    enterApp();
+                }
+            }, 1000);
+        };
+
         const clearLoading = () => {
             if (loadingOverlay.classList.contains('hidden')) return;
             loadingOverlay.classList.add('opacity-0');
             setTimeout(() => {
                 loadingOverlay.classList.add('hidden');
                 startupPopup.classList.remove('hidden');
-                setTimeout(() => popupContent.classList.remove('scale-90'), 50);
+                setTimeout(() => {
+                    popupContent.classList.remove('scale-90');
+                    startCountdown();
+                }, 50);
             }, 600);
         };
 
@@ -488,7 +522,7 @@ while i < 4:
             setTimeout(clearLoading, 3000); 
         }
 
-        document.getElementById('closeStartup').addEventListener('click', () => startupPopup.classList.add('hidden'));
+        document.getElementById('closeStartup').addEventListener('click', enterApp);
         document.getElementById('closeError').addEventListener('click', () => errorModal.classList.add('hidden'));
 
         themeToggle.addEventListener('click', () => {
@@ -498,7 +532,6 @@ while i < 4:
             moonIcon.classList.toggle('hidden');
         });
 
-        // Whenever user types, if we are executing, we might want to remind them to re-start
         codeInput.addEventListener('input', () => {
             if (isExecuting) {
                 startBtnText.textContent = "Sync Changes";
@@ -518,16 +551,11 @@ while i < 4:
             if (interpreter.parse(code)) {
                 isExecuting = true;
                 currentIdx = 0;
-                
-                // Show visualizer side-by-side
                 visualPane.classList.remove('hidden');
-                
-                // UI Button State
                 startBtnText.textContent = "Re-start";
                 startBtn.classList.remove('bg-[#0969da]');
                 startBtn.classList.add('bg-[#1f883d]');
                 resetBtn.classList.remove('hidden');
-                
                 renderCode();
                 applyStep(0);
             }
@@ -580,7 +608,6 @@ while i < 4:
 
             document.getElementById('instruction').textContent = step.message || "Press Spacebar to step...";
             
-            // Render captured scopes/variables in the sidebar metadata area
             const varHtml = Object.keys(step.vars).length 
                 ? Object.entries(step.vars).map(([k,v]) => `
                     <div class="flex justify-between items-center bg-[var(--bg-app)] border border-[var(--border)] p-2 rounded shadow-sm">
