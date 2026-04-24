@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,118 +8,194 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
+        :root {
+            /* Light Theme Variables */
+            --bg-app: #ffffff;
+            --bg-sidebar: #f6f8fa;
+            --bg-editor: #ffffff;
+            --text-main: #1f2328;
+            --text-muted: #636c76;
+            --border: #d0d7de;
+            --accent: #0969da;
+            --accent-bg: #f1f8ff;
+            --success: #1a7f37;
+            --success-bg: #dafbe1;
+            --token-var: #0550ae;
+            --token-val: #116329;
+            --console-bg: #f6f8fa;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Variables */
+            --bg-app: #0d1117;
+            --bg-sidebar: #161b22;
+            --bg-editor: #0d1117;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --accent: #58a6ff;
+            --accent-bg: rgba(56, 139, 253, 0.1);
+            --success: #3fb950;
+            --success-bg: rgba(63, 185, 80, 0.1);
+            --token-var: #79c0ff;
+            --token-val: #aff5b4;
+            --console-bg: #010409;
+        }
+
         body {
-            background-color: #ffffff;
-            color: #1f2328;
+            background-color: var(--bg-app);
+            color: var(--text-main);
             font-family: 'Fira Code', monospace;
             overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .code-token {
             display: inline-block;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
         }
 
         .variable-swap {
-            color: #0969da;
+            color: var(--token-var);
             font-weight: bold;
-            text-shadow: 0 0 8px rgba(9, 105, 218, 0.1);
         }
 
         .value-active {
-            color: #1a7f37;
+            color: var(--token-val);
             transform: scale(1.15);
-            text-shadow: 0 0 10px rgba(26, 127, 55, 0.2);
+            text-shadow: 0 0 10px var(--accent-bg);
         }
 
         .line-highlight {
-            background-color: #f1f8ff;
-            border-left: 3px solid #0969da;
+            background-color: var(--accent-bg);
+            border-left: 3px solid var(--accent);
         }
 
         .sidebar {
-            background-color: #f6f8fa;
-            border-left: 1px solid #d0d7de;
-        }
-
-        .editor-bg {
-            background-color: #ffffff;
+            background-color: var(--bg-sidebar);
+            border-left: 1px solid var(--border);
         }
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #ffffff;
+            background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #d0d7de;
+            background: var(--border);
             border-radius: 4px;
         }
 
         @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(26, 127, 55, 0.2); }
-            70% { box-shadow: 0 0 0 8px rgba(26, 127, 55, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(26, 127, 55, 0); }
+            0% { box-shadow: 0 0 0 0 var(--accent-bg); }
+            70% { box-shadow: 0 0 0 8px transparent; }
+            100% { box-shadow: 0 0 0 0 transparent; }
         }
 
         .status-dot {
             animation: pulse-green 2s infinite;
         }
+
+        /* Loading Screen */
+        #loadingOverlay {
+            background-color: #ffffff;
+            z-index: 100;
+        }
+        [data-theme="dark"] #loadingOverlay { background-color: #0d1117; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="flex items-center justify-between px-6 py-4 border-b border-[#d0d7de] bg-[#f6f8fa]">
-        <div class="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#1a7f37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
-            <h1 class="text-xl font-bold tracking-tight text-[#1f2328]">PyLoop<span class="text-[#0969da]">Visualizer</span></h1>
+    <!-- Loading Screen -->
+    <div id="loadingOverlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="spinner mb-4"></div>
+        <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse">LOADING VISUALIZER</div>
+    </div>
+
+    <!-- Startup Popup -->
+    <div id="startupPopup" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] px-4">
+        <div class="bg-white dark:bg-[#161b22] border border-[#d0d7de] dark:border-[#30363d] rounded-xl p-8 max-w-sm w-full shadow-2xl text-center scale-90 transition-transform duration-300" id="popupContent">
+            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-4xl">😉</span>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Welcome!</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">
+                Created with ❤️ by <span class="text-blue-500 font-bold">Amarnath</span>
+            </p>
+            <button id="closeStartup" class="w-full bg-[#1f883d] hover:bg-[#1a7f37] text-white py-3 rounded-lg font-bold transition-colors">
+                Let's Visualise
+            </button>
         </div>
-        <div id="controls" class="flex gap-4">
-            <button id="startBtn" class="bg-[#1f883d] hover:bg-[#1a7f37] text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Start Visualizer
+    </div>
+
+    <!-- Header -->
+    <header class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
+            <h1 class="text-xl font-bold tracking-tight">PyLoop<span class="text-[var(--accent)]">Visualizer</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="p-2 rounded-lg border border-[var(--border)] bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] transition-all">
+                <svg id="sunIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zm2.12 10.607a1 1 0 010-1.414l.706-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"/></svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
             </button>
-            <button id="resetBtn" class="hidden bg-[#f6f8fa] hover:bg-[#eff1f3] text-[#1f2328] border border-[#d0d7de] px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                Reset
-            </button>
+            <div id="controls" class="flex gap-2">
+                <button id="startBtn" class="bg-[#1f883d] hover:bg-[#1a7f37] text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    Start
+                </button>
+                <button id="resetBtn" class="hidden bg-[var(--bg-sidebar)] hover:bg-[var(--border)] text-[var(--text-main)] border border-[var(--border)] px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    Reset
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="flex-1 flex overflow-hidden">
         <!-- Editor Section -->
         <div id="editorPane" class="flex-1 flex flex-col">
-            <div class="px-6 py-2 bg-[#ffffff] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#d0d7de]">
+            <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)]">
                 main.py
             </div>
-            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[#ffffff] text-[#1f2328] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter your Python loop here...">for i in range(4):
+            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[var(--bg-app)] text-[var(--text-main)] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter loop...">for i in range(4):
     result = i * 10
     print(result)</textarea>
-            
-            <!-- Quick Tips Footer -->
-            <div class="p-4 bg-[#f6f8fa] text-sm text-gray-600 border-t border-[#d0d7de]">
-                💡 Tip: Press <kbd class="px-2 py-0.5 bg-[#ebeef1] border border-[#d0d7de] rounded text-xs">Start</kbd> then use <kbd class="px-2 py-0.5 bg-[#ebeef1] border border-[#d0d7de] rounded text-xs">Spacebar</kbd> to step through.
+            <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)]">
+                💡 Tip: Use <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Spacebar</kbd> to step through code.
             </div>
         </div>
 
-        <!-- Visualization Section (Hidden by default) -->
-        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[#ffffff]">
-            <div class="px-6 py-2 bg-[#ffffff] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#d0d7de] flex justify-between items-center">
+        <!-- Visualization Section -->
+        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[var(--bg-app)]">
+            <div class="px-6 py-2 bg-[var(--bg-app)] text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest border-b border-[var(--border)] flex justify-between items-center">
                 <span>Execution Viewer</span>
-                <span id="stepCounter" class="text-[#0969da]">Step 0 / 0</span>
+                <span id="stepCounter" class="text-[var(--accent)]">Step 0 / 0</span>
             </div>
-            <div id="codeDisplay" class="flex-1 p-8 text-xl leading-relaxed whitespace-pre-wrap select-none overflow-auto custom-scrollbar text-[#1f2328]">
-                <!-- Executing code will be rendered here -->
+            <div id="codeDisplay" class="flex-1 p-8 text-xl leading-relaxed whitespace-pre-wrap select-none overflow-auto custom-scrollbar">
             </div>
-            <div class="p-6 bg-[#f6f8fa] border-t border-[#d0d7de] flex items-center justify-between">
+            <div class="p-6 bg-[var(--bg-sidebar)] border-t border-[var(--border)] flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="h-3 w-3 rounded-full bg-[#1a7f37] status-dot"></div>
-                    <span id="instruction" class="text-sm text-gray-600">Press Spacebar to execute next step...</span>
+                    <div class="h-3 w-3 rounded-full bg-[var(--success)] status-dot"></div>
+                    <span id="instruction" class="text-sm text-[var(--text-muted)]">Step through execution...</span>
                 </div>
-                <button id="nextStepBtn" class="bg-[#ffffff] hover:bg-[#f6f8fa] text-[#1f2328] border border-[#d0d7de] px-4 py-2 rounded text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
+                <button id="nextStepBtn" class="bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] text-[var(--text-main)] border border-[var(--border)] px-4 py-2 rounded text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
                     Next Step <span class="opacity-40 text-xs font-normal">SPACE</span>
                 </button>
             </div>
@@ -127,191 +203,179 @@
 
         <!-- Variables Sidebar -->
         <aside class="w-80 sidebar flex flex-col">
-            <div class="p-4 border-b border-[#d0d7de] flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
-                <h2 class="font-bold text-sm uppercase tracking-wider text-gray-500">Variables</h2>
+            <!-- Var section -->
+            <div class="p-4 border-b border-[var(--border)] flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--text-muted)]"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+                <h2 class="font-bold text-sm uppercase tracking-wider text-[var(--text-muted)]">Variables</h2>
             </div>
             <div id="variableList" class="flex-1 p-4 flex flex-col gap-3 overflow-auto custom-scrollbar">
-                <div class="text-center py-10 text-gray-400 italic text-sm">
-                    No variables active
-                </div>
+                <div class="text-center py-10 text-[var(--text-muted)] italic text-sm">No variables active</div>
             </div>
-            <div class="p-4 border-t border-[#d0d7de] bg-white">
-                <h3 class="text-xs font-bold uppercase text-gray-400 mb-2">Loop Info</h3>
-                <div id="loopInfo" class="text-sm text-gray-600 space-y-1">
-                    Waiting for execution...
-                </div>
+
+            <!-- Print Console Section (NEW) -->
+            <div class="p-4 border-t border-[var(--border)] flex items-center gap-2 bg-[var(--bg-sidebar)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--text-muted)]"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                <h2 class="font-bold text-sm uppercase tracking-wider text-[var(--text-muted)]">Console Output</h2>
+            </div>
+            <div id="consoleOutput" class="h-48 p-4 bg-[var(--console-bg)] text-sm font-mono overflow-auto custom-scrollbar border-t border-[var(--border)]">
+                <div class="text-gray-500 italic">Program output will appear here...</div>
+            </div>
+
+            <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-app)]">
+                <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] mb-2">Metadata</h3>
+                <div id="loopInfo" class="text-xs text-[var(--text-muted)] space-y-1">Waiting...</div>
             </div>
         </aside>
     </main>
 
-    <!-- Syntax Error Modal -->
-    <div id="errorModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-        <div class="bg-white border border-red-200 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h2 class="text-red-600 font-bold text-lg mb-2 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-                Syntax Support Error
-            </h2>
-            <p id="errorMessage" class="text-gray-600 text-sm mb-4">The visualizer currently only supports simple for/while loops and basic assignments.</p>
-            <button id="closeError" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-2 rounded transition-colors font-medium">Understood</button>
-        </div>
-    </div>
-
     <script>
         /**
-         * Simple Python Loop Interpreter for Visualization
+         * Enhanced Interpreter with Output Support
          */
         class LoopInterpreter {
             constructor() {
                 this.steps = [];
-                this.variables = {};
                 this.lines = [];
             }
 
             parse(code) {
                 this.steps = [];
-                this.variables = {};
                 this.lines = code.trim().split('\n').map(l => l.trimEnd());
-                
                 try {
                     this.simulateExecution();
                     return true;
                 } catch (e) {
-                    console.error("Parse Error:", e);
+                    console.error("Simulation error", e);
                     return false;
                 }
             }
 
             simulateExecution() {
-                let currentLine = 0;
+                let currentLineIdx = 0;
                 let iterations = 0;
-                const MAX_ITERATIONS = 200; 
-
+                const MAX_ITERATIONS = 200;
                 const scope = {};
+                let currentConsole = [];
 
-                while (currentLine < this.lines.length && iterations < MAX_ITERATIONS) {
-                    let line = this.lines[currentLine].trim();
-                    if (!line) { currentLine++; continue; }
+                while (currentLineIdx < this.lines.length && iterations < MAX_ITERATIONS) {
+                    let lineRaw = this.lines[currentLineIdx];
+                    let line = lineRaw.trim();
+                    if (!line) { currentLineIdx++; continue; }
 
-                    const assignmentMatch = line.match(/^(\w+)\s*=\s*(.*)$/);
-                    if (assignmentMatch && !line.startsWith('for') && !line.startsWith('while')) {
-                        const varName = assignmentMatch[1];
-                        const expr = assignmentMatch[2];
-                        scope[varName] = this.evaluateExpression(expr, scope);
-                        
-                        this.addStep(currentLine, {...scope}, varName, scope[varName]);
-                        currentLine++;
+                    // Handle print(expr)
+                    const printMatch = line.match(/^print\((.*)\)$/);
+                    if (printMatch) {
+                        const expr = printMatch[1];
+                        const val = this.evaluateExpression(expr, scope);
+                        currentConsole.push(String(val));
+                        this.addStep(currentLineIdx, {...scope}, null, null, [...currentConsole]);
+                        currentLineIdx++;
+                        iterations++;
                         continue;
                     }
 
+                    // Handle Variable Assignment
+                    const assignmentMatch = line.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
+                    if (assignmentMatch && !line.startsWith('for') && !line.startsWith('while')) {
+                        const varName = assignmentMatch[1];
+                        const op = assignmentMatch[2];
+                        const expr = assignmentMatch[3];
+                        const val = this.evaluateExpression(expr, scope);
+                        
+                        if (op === '=') scope[varName] = val;
+                        else if (op === '+=') scope[varName] = (scope[varName] || 0) + val;
+                        else if (op === '-=') scope[varName] = (scope[varName] || 0) - val;
+
+                        this.addStep(currentLineIdx, {...scope}, varName, scope[varName], [...currentConsole]);
+                        currentLineIdx++;
+                        iterations++;
+                        continue;
+                    }
+
+                    // For Loop
                     const forMatch = line.match(/^for\s+(\w+)\s+in\s+(.+):$/);
                     if (forMatch) {
                         const varName = forMatch[1];
-                        const iteratorExpr = forMatch[2];
-                        const collection = this.evaluateExpression(iteratorExpr, scope);
-
-                        if (!Array.isArray(collection)) throw new Error("Not an iterable");
-
-                        const loopStartIndex = currentLine;
-                        const loopBody = this.getLoopBody(loopStartIndex);
+                        const collection = this.evaluateExpression(forMatch[2], scope);
+                        const loopBody = this.getLoopBody(currentLineIdx);
+                        const loopStart = currentLineIdx;
 
                         for (const val of collection) {
                             scope[varName] = val;
-                            this.addStep(loopStartIndex, {...scope}, varName, val);
+                            this.addStep(loopStart, {...scope}, varName, val, [...currentConsole]);
                             
-                            for (const bodyLineObj of loopBody) {
-                                let bodyLine = bodyLineObj.text.trim();
-                                const bodyAssign = bodyLine.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
-                                if (bodyAssign) {
-                                    const bVar = bodyAssign[1];
-                                    const bOp = bodyAssign[2];
-                                    const bExpr = bodyAssign[3];
-                                    
-                                    const newVal = this.evaluateExpression(bExpr, scope);
-                                    if (bOp === '=') scope[bVar] = newVal;
-                                    else if (bOp === '+=') scope[bVar] = (scope[bVar] || 0) + newVal;
-                                    else if (bOp === '-=') scope[bVar] = (scope[bVar] || 0) - newVal;
-
-                                    this.addStep(bodyLineObj.index, {...scope}, bVar, scope[bVar]);
-                                } else {
-                                    this.addStep(bodyLineObj.index, {...scope});
-                                }
+                            for (const bodyLine of loopBody) {
+                                this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
                                 iterations++;
-                                if (iterations > MAX_ITERATIONS) break;
                             }
                         }
-                        currentLine = loopStartIndex + loopBody.length + 1;
+                        currentLineIdx = loopStart + loopBody.length + 1;
                         continue;
                     }
 
+                    // While Loop
                     const whileMatch = line.match(/^while\s+(.+):$/);
                     if (whileMatch) {
-                        const condition = whileMatch[1];
-                        const loopStartIndex = currentLine;
-                        const loopBody = this.getLoopBody(loopStartIndex);
+                        const cond = whileMatch[1];
+                        const loopBody = this.getLoopBody(currentLineIdx);
+                        const loopStart = currentLineIdx;
 
-                        while (this.evaluateCondition(condition, scope)) {
-                            this.addStep(loopStartIndex, {...scope});
-
-                            for (const bodyLineObj of loopBody) {
-                                let bodyLine = bodyLineObj.text.trim();
-                                const bodyAssign = bodyLine.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
-                                if (bodyAssign) {
-                                    const bVar = bodyAssign[1];
-                                    const bOp = bodyAssign[2];
-                                    const bExpr = bodyAssign[3];
-                                    
-                                    const newVal = this.evaluateExpression(bExpr, scope);
-                                    if (bOp === '=') scope[bVar] = newVal;
-                                    else if (bOp === '+=') scope[bVar] = (scope[bVar] || 0) + newVal;
-                                    else if (bOp === '-=') scope[bVar] = (scope[bVar] || 0) - newVal;
-
-                                    this.addStep(bodyLineObj.index, {...scope}, bVar, scope[bVar]);
-                                } else {
-                                    this.addStep(bodyLineObj.index, {...scope});
-                                }
+                        while (this.evaluateCondition(cond, scope) && iterations < MAX_ITERATIONS) {
+                            this.addStep(loopStart, {...scope}, null, null, [...currentConsole]);
+                            for (const bodyLine of loopBody) {
+                                this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
                                 iterations++;
-                                if (iterations > MAX_ITERATIONS) break;
                             }
-                            if (iterations > MAX_ITERATIONS) break;
                         }
-                        currentLine = loopStartIndex + loopBody.length + 1;
+                        currentLineIdx = loopStart + loopBody.length + 1;
                         continue;
                     }
 
-                    this.addStep(currentLine, {...scope});
-                    currentLine++;
+                    this.addStep(currentLineIdx, {...scope}, null, null, [...currentConsole]);
+                    currentLineIdx++;
                     iterations++;
                 }
+                this.addStep(-1, {...scope}, null, null, [...currentConsole], "Execution Finished");
+            }
 
-                this.addStep(-1, {...scope}, null, null, "Loop Finished");
+            processLine(lineRaw, idx, scope, currentConsole) {
+                let line = lineRaw.trim();
+                const pm = line.match(/^print\((.*)\)$/);
+                if (pm) {
+                    currentConsole.push(String(this.evaluateExpression(pm[1], scope)));
+                    this.addStep(idx, {...scope}, null, null, [...currentConsole]);
+                    return;
+                }
+                const am = line.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
+                if (am) {
+                    const varName = am[1], op = am[2], expr = am[3];
+                    const val = this.evaluateExpression(expr, scope);
+                    if (op === '=') scope[varName] = val;
+                    else if (op === '+=') scope[varName] = (scope[varName] || 0) + val;
+                    this.addStep(idx, {...scope}, varName, scope[varName], [...currentConsole]);
+                } else {
+                    this.addStep(idx, {...scope}, null, null, [...currentConsole]);
+                }
             }
 
             getLoopBody(startIndex) {
                 const body = [];
                 const startIndent = this.lines[startIndex].search(/\S/);
                 for (let i = startIndex + 1; i < this.lines.length; i++) {
-                    const currentIndent = this.lines[i].search(/\S/);
                     if (this.lines[i].trim() === "") continue;
-                    if (currentIndent > startIndent) {
-                        body.push({ index: i, text: this.lines[i] });
-                    } else {
-                        break;
-                    }
+                    const curIndent = this.lines[i].search(/\S/);
+                    if (curIndent > startIndent) body.push({ index: i, text: this.lines[i] });
+                    else break;
                 }
                 return body;
             }
 
             evaluateExpression(expr, scope) {
                 expr = expr.trim();
-                const rangeMatch = expr.match(/^range\((\d+)\)$/);
-                if (rangeMatch) return Array.from({length: parseInt(rangeMatch[1])}, (_, i) => i);
-                const range2Match = expr.match(/^range\((\d+),\s*(\d+)\)$/);
-                if (range2Match) {
-                    const s = parseInt(range2Match[1]);
-                    const e = parseInt(range2Match[2]);
-                    return Array.from({length: e - s}, (_, i) => i + s);
-                }
+                const r1 = expr.match(/^range\((\d+)\)$/);
+                if (r1) return Array.from({length: parseInt(r1[1])}, (_, i) => i);
+                const r2 = expr.match(/^range\((\d+),\s*(\d+)\)$/);
+                if (r2) return Array.from({length: parseInt(r2[2]) - parseInt(r2[1])}, (_, i) => i + parseInt(r2[1]));
                 if (expr.startsWith('[') && expr.endsWith(']')) {
                     return expr.slice(1, -1).split(',').map(v => {
                         v = v.trim();
@@ -319,45 +383,34 @@
                     });
                 }
                 try {
-                    let processedExpr = expr;
-                    for (const [key, val] of Object.entries(scope)) {
-                        const regex = new RegExp(`\\b${key}\\b`, 'g');
-                        processedExpr = processedExpr.replace(regex, val);
-                    }
-                    return Function(`"use strict"; return (${processedExpr})`)();
-                } catch (e) {
-                    return expr;
-                }
+                    let proc = expr;
+                    for (const [k, v] of Object.entries(scope)) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), v); }
+                    return Function(`"use strict"; return (${proc})`)();
+                } catch (e) { return expr; }
             }
 
             evaluateCondition(cond, scope) {
                 try {
-                    let processed = cond;
-                    for (const [key, val] of Object.entries(scope)) {
-                        const regex = new RegExp(`\\b${key}\\b`, 'g');
-                        processed = processed.replace(regex, val);
-                    }
-                    return !!Function(`"use strict"; return (${processed})`)();
-                } catch (e) {
-                    return false;
-                }
+                    let proc = cond;
+                    for (const [k, v] of Object.entries(scope)) { proc = proc.replace(new RegExp(`\\b${k}\\b`, 'g'), v); }
+                    return !!Function(`"use strict"; return (${proc})`)();
+                } catch (e) { return false; }
             }
 
-            addStep(lineIdx, vars, activeVar = null, value = null, message = null) {
-                this.steps.push({
-                    lineIndex: lineIdx,
-                    vars: vars,
-                    activeVar: activeVar,
-                    value: value,
-                    message: message
-                });
+            addStep(lineIdx, vars, activeVar, value, output, message) {
+                this.steps.push({ lineIndex: lineIdx, vars, activeVar, value, output, message });
             }
         }
 
         const interpreter = new LoopInterpreter();
-        let currentStepIdx = 0;
+        let currentIdx = 0;
         let isExecuting = false;
 
+        // UI Selectors
+        const html = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
         const startBtn = document.getElementById('startBtn');
         const resetBtn = document.getElementById('resetBtn');
         const codeInput = document.getElementById('codeInput');
@@ -365,32 +418,48 @@
         const visualPane = document.getElementById('visualPane');
         const codeDisplay = document.getElementById('codeDisplay');
         const variableList = document.getElementById('variableList');
-        const loopInfo = document.getElementById('loopInfo');
+        const consoleOutput = document.getElementById('consoleOutput');
         const stepCounter = document.getElementById('stepCounter');
-        const nextStepBtn = document.getElementById('nextStepBtn');
-        const instruction = document.getElementById('instruction');
-        const errorModal = document.getElementById('errorModal');
-        const closeError = document.getElementById('closeError');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const startupPopup = document.getElementById('startupPopup');
+        const popupContent = document.getElementById('popupContent');
+        const closeStartup = document.getElementById('closeStartup');
 
-        function startVisualization() {
-            const code = codeInput.value;
-            const success = interpreter.parse(code);
+        // Startup Logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loadingOverlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                    startupPopup.classList.remove('hidden');
+                    setTimeout(() => popupContent.classList.remove('scale-90'), 50);
+                }, 500);
+            }, 1500);
+        });
 
-            if (!success || interpreter.steps.length === 0) {
-                errorModal.classList.remove('hidden');
-                return;
+        closeStartup.addEventListener('click', () => {
+            startupPopup.classList.add('hidden');
+        });
+
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            sunIcon.classList.toggle('hidden');
+            moonIcon.classList.toggle('hidden');
+        });
+
+        function start() {
+            if (interpreter.parse(codeInput.value)) {
+                isExecuting = true;
+                currentIdx = 0;
+                editorPane.classList.add('hidden');
+                visualPane.classList.remove('hidden');
+                startBtn.classList.add('hidden');
+                resetBtn.classList.remove('hidden');
+                renderCode();
+                applyStep(0);
             }
-
-            isExecuting = true;
-            currentStepIdx = 0;
-            
-            editorPane.classList.add('hidden');
-            visualPane.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-            resetBtn.classList.remove('hidden');
-
-            renderCodeTemplate();
-            applyStep(0);
         }
 
         function reset() {
@@ -399,39 +468,18 @@
             visualPane.classList.add('hidden');
             startBtn.classList.remove('hidden');
             resetBtn.classList.add('hidden');
-            variableList.innerHTML = '<div class="text-center py-10 text-gray-400 italic text-sm">No variables active</div>';
-            loopInfo.textContent = 'Waiting for execution...';
+            consoleOutput.innerHTML = '<div class="text-gray-500 italic">Program output will appear here...</div>';
+            variableList.innerHTML = '<div class="text-center py-10 text-[var(--text-muted)] italic text-sm">No variables active</div>';
         }
 
-        function renderCodeTemplate() {
+        function renderCode() {
             codeDisplay.innerHTML = '';
-            interpreter.lines.forEach((line, idx) => {
-                const lineDiv = document.createElement('div');
-                lineDiv.className = 'line-container px-4 py-1 rounded transition-colors flex';
-                lineDiv.id = `line-${idx}`;
-
-                const lineNum = document.createElement('span');
-                lineNum.className = 'w-8 text-gray-400 text-sm mt-1 shrink-0';
-                lineNum.textContent = idx + 1;
-
-                const lineContent = document.createElement('div');
-                lineContent.className = 'flex-1';
-                
-                const tokens = line.split(/(\W+)/);
-                tokens.forEach(token => {
-                    const span = document.createElement('span');
-                    span.className = 'code-token';
-                    if (token.match(/^[a-zA-Z_]\w*$/)) {
-                        span.classList.add('token-word');
-                        span.dataset.token = token;
-                    }
-                    span.textContent = token;
-                    lineContent.appendChild(span);
-                });
-
-                lineDiv.appendChild(lineNum);
-                lineDiv.appendChild(lineContent);
-                codeDisplay.appendChild(lineDiv);
+            interpreter.lines.forEach((line, i) => {
+                const div = document.createElement('div');
+                div.className = 'line-container px-4 py-1 rounded transition-colors flex';
+                div.id = `line-${i}`;
+                div.innerHTML = `<span class="w-8 text-[var(--text-muted)] text-sm mt-1 shrink-0">${i+1}</span><div class="flex-1">${line.split(/(\W+)/).map(t => `<span class="code-token ${t.match(/^[a-zA-Z_]\w*$/) ? 'token-word' : ''}" data-token="${t}">${t}</span>`).join('')}</div>`;
+                codeDisplay.appendChild(div);
             });
         }
 
@@ -439,94 +487,57 @@
             const step = interpreter.steps[idx];
             if (!step) return;
 
-            document.querySelectorAll('.line-container').forEach(el => el.classList.remove('line-highlight'));
+            document.querySelectorAll('.line-container').forEach(l => l.classList.remove('line-highlight'));
             const activeLine = document.getElementById(`line-${step.lineIndex}`);
             if (activeLine) {
                 activeLine.classList.add('line-highlight');
                 activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            stepCounter.textContent = `Step ${idx + 1} / ${interpreter.steps.length}`;
-            updateVariablesSidebar(step.vars, step.activeVar);
+            stepCounter.textContent = `Step ${idx+1} / ${interpreter.steps.length}`;
+            
+            // Console update
+            consoleOutput.innerHTML = step.output.length > 0 
+                ? step.output.map(o => `<div class="mb-1 text-[var(--accent)]">> ${o}</div>`).join('')
+                : '<div class="text-gray-500 italic">No output yet...</div>';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
 
-            const lineTokens = activeLine?.querySelectorAll('.token-word');
-            if (lineTokens && step.activeVar) {
-                lineTokens.forEach(tokenEl => {
-                    if (tokenEl.dataset.token === step.activeVar) {
-                        tokenEl.classList.add('variable-swap', 'value-active');
-                        tokenEl.textContent = step.value;
-                        setTimeout(() => {
-                            tokenEl.classList.remove('value-active');
-                        }, 500);
+            // Variables update
+            variableList.innerHTML = Object.keys(step.vars).length ? Object.entries(step.vars).map(([k,v]) => `
+                <div class="p-3 rounded border ${k === step.activeVar ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-[var(--border)]'} flex justify-between items-center shadow-sm">
+                    <span class="font-bold text-[var(--token-var)]">${k}</span>
+                    <span class="${k === step.activeVar ? 'text-[var(--token-val)] scale-110 font-bold' : ''}">${JSON.stringify(v)}</span>
+                </div>
+            `).join('') : '<div class="text-center py-10 text-[var(--text-muted)] italic text-sm">No variables active</div>';
+
+            // Swap tokens
+            if (activeLine && step.activeVar) {
+                activeLine.querySelectorAll('.token-word').forEach(t => {
+                    if (t.dataset.token === step.activeVar) {
+                        t.textContent = step.value;
+                        t.classList.add('variable-swap', 'value-active');
+                        setTimeout(() => t.classList.remove('value-active'), 500);
                     } else {
-                        tokenEl.classList.remove('variable-swap', 'value-active');
-                        tokenEl.textContent = tokenEl.dataset.token;
+                        t.textContent = t.dataset.token;
+                        t.classList.remove('variable-swap');
                     }
                 });
             } else if (activeLine) {
                 activeLine.querySelectorAll('.token-word').forEach(t => {
                     t.textContent = t.dataset.token;
-                    t.classList.remove('variable-swap', 'value-active');
+                    t.classList.remove('variable-swap');
                 });
             }
 
-            if (step.message) {
-                instruction.textContent = step.message;
-                instruction.classList.replace('text-gray-600', 'text-[#0969da]');
-            } else {
-                instruction.textContent = "Press Spacebar to execute next step...";
-                instruction.classList.replace('text-[#0969da]', 'text-gray-600');
-            }
-
-            loopInfo.innerHTML = `
-                <div class="flex justify-between"><span>Current Line</span><span class="font-bold">${step.lineIndex + 1}</span></div>
-                <div class="flex justify-between"><span>Status</span><span class="font-bold">${idx > 0 ? 'Active' : 'Started'}</span></div>
-            `;
+            document.getElementById('instruction').textContent = step.message || "Press Spacebar to step...";
         }
 
-        function updateVariablesSidebar(vars, activeVar) {
-            if (Object.keys(vars).length === 0) {
-                variableList.innerHTML = '<div class="text-center py-10 text-gray-400 italic text-sm">No variables active</div>';
-                return;
-            }
+        function next() { if (isExecuting && currentIdx < interpreter.steps.length - 1) applyStep(++currentIdx); }
 
-            variableList.innerHTML = '';
-            for (const [key, val] of Object.entries(vars)) {
-                const item = document.createElement('div');
-                const isActive = key === activeVar;
-                item.className = `p-3 rounded border ${isActive ? 'border-[#0969da] bg-[#ddf4ff]' : 'border-[#d0d7de] bg-white'} transition-all duration-300 flex justify-between items-center shadow-sm`;
-                
-                item.innerHTML = `
-                    <span class="font-bold text-[#0550ae]">${key}</span>
-                    <span class="${isActive ? 'text-[#116329] font-bold scale-110' : 'text-gray-600'} transition-transform">${JSON.stringify(val)}</span>
-                `;
-                variableList.appendChild(item);
-            }
-        }
-
-        function nextStep() {
-            if (!isExecuting) return;
-            if (currentStepIdx < interpreter.steps.length - 1) {
-                currentStepIdx++;
-                applyStep(currentStepIdx);
-            } else {
-                instruction.textContent = "Execution complete. Press Reset to try again.";
-            }
-        }
-
-        startBtn.addEventListener('click', startVisualization);
+        startBtn.addEventListener('click', start);
         resetBtn.addEventListener('click', reset);
-        nextStepBtn.addEventListener('click', nextStep);
-        closeError.addEventListener('click', () => errorModal.classList.add('hidden'));
-
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && isExecuting) {
-                e.preventDefault();
-                nextStep();
-            }
-        });
-
-        interpreter.parse(codeInput.value);
+        document.getElementById('nextStepBtn').addEventListener('click', next);
+        window.addEventListener('keydown', e => { if (e.code === 'Space' && isExecuting) { e.preventDefault(); next(); } });
     </script>
 </body>
 </html>
