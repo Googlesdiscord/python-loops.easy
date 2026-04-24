@@ -9,8 +9,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: #ffffff;
+            color: #1f2328;
             font-family: 'Fira Code', monospace;
             overflow: hidden;
         }
@@ -22,46 +22,46 @@
         }
 
         .variable-swap {
-            color: #79c0ff;
+            color: #0969da;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(121, 192, 255, 0.3);
+            text-shadow: 0 0 8px rgba(9, 105, 218, 0.1);
         }
 
         .value-active {
-            color: #aff5b4;
-            transform: scale(1.2);
-            text-shadow: 0 0 15px rgba(175, 245, 180, 0.5);
+            color: #1a7f37;
+            transform: scale(1.15);
+            text-shadow: 0 0 10px rgba(26, 127, 55, 0.2);
         }
 
         .line-highlight {
-            background-color: rgba(110, 118, 129, 0.1);
-            border-left: 3px solid #58a6ff;
+            background-color: #f1f8ff;
+            border-left: 3px solid #0969da;
         }
 
         .sidebar {
-            background-color: #161b22;
-            border-left: 1px solid #30363d;
+            background-color: #f6f8fa;
+            border-left: 1px solid #d0d7de;
         }
 
         .editor-bg {
-            background-color: #0d1117;
+            background-color: #ffffff;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0d1117;
+            background: #ffffff;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #30363d;
+            background: #d0d7de;
             border-radius: 4px;
         }
 
         @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(175, 245, 180, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(175, 245, 180, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(175, 245, 180, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(26, 127, 55, 0.2); }
+            70% { box-shadow: 0 0 0 8px rgba(26, 127, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(26, 127, 55, 0); }
         }
 
         .status-dot {
@@ -72,17 +72,17 @@
 <body class="h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="flex items-center justify-between px-6 py-4 border-b border-[#30363d] bg-[#161b22]">
+    <header class="flex items-center justify-between px-6 py-4 border-b border-[#d0d7de] bg-[#f6f8fa]">
         <div class="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#3fb950]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
-            <h1 class="text-xl font-bold tracking-tight">PyLoop<span class="text-[#58a6ff]">Visualizer</span></h1>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#1a7f37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="m11.17 12 4.14-4.14"/><path d="m12.83 12-4.14-4.14"/><path d="M16 11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6"/><path d="M8 21h8"/><path d="M12 11v10"/></svg>
+            <h1 class="text-xl font-bold tracking-tight text-[#1f2328]">PyLoop<span class="text-[#0969da]">Visualizer</span></h1>
         </div>
         <div id="controls" class="flex gap-4">
-            <button id="startBtn" class="bg-[#238636] hover:bg-[#2ea043] text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2">
+            <button id="startBtn" class="bg-[#1f883d] hover:bg-[#1a7f37] text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 Start Visualizer
             </button>
-            <button id="resetBtn" class="hidden bg-[#30363d] hover:bg-[#484f58] text-white px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2">
+            <button id="resetBtn" class="hidden bg-[#f6f8fa] hover:bg-[#eff1f3] text-[#1f2328] border border-[#d0d7de] px-6 py-2 rounded-md font-medium transition-all flex items-center gap-2 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                 Reset
             </button>
@@ -92,62 +92,53 @@
     <main class="flex-1 flex overflow-hidden">
         <!-- Editor Section -->
         <div id="editorPane" class="flex-1 flex flex-col">
-            <div class="px-6 py-2 bg-[#0d1117] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#30363d]">
+            <div class="px-6 py-2 bg-[#ffffff] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#d0d7de]">
                 main.py
             </div>
-            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[#0d1117] text-[#e6edf3] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter your Python loop here...
-Example:
-for i in range(3):
-    print(i)
-
-or 
-
-numbers = [10, 20]
-for n in numbers:
-    val = n * 2">for i in range(4):
+            <textarea id="codeInput" spellcheck="false" class="flex-1 w-full p-6 bg-[#ffffff] text-[#1f2328] focus:outline-none resize-none text-lg custom-scrollbar" placeholder="Enter your Python loop here...">for i in range(4):
     result = i * 10
     print(result)</textarea>
             
             <!-- Quick Tips Footer -->
-            <div class="p-4 bg-[#161b22] text-sm text-gray-400 border-t border-[#30363d]">
-                💡 Tip: Press <kbd class="px-2 py-0.5 bg-[#30363d] rounded text-xs">Start</kbd> then use <kbd class="px-2 py-0.5 bg-[#30363d] rounded text-xs">Spacebar</kbd> to step through.
+            <div class="p-4 bg-[#f6f8fa] text-sm text-gray-600 border-t border-[#d0d7de]">
+                💡 Tip: Press <kbd class="px-2 py-0.5 bg-[#ebeef1] border border-[#d0d7de] rounded text-xs">Start</kbd> then use <kbd class="px-2 py-0.5 bg-[#ebeef1] border border-[#d0d7de] rounded text-xs">Spacebar</kbd> to step through.
             </div>
         </div>
 
         <!-- Visualization Section (Hidden by default) -->
-        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[#0d1117]">
-            <div class="px-6 py-2 bg-[#0d1117] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#30363d] flex justify-between items-center">
+        <div id="visualPane" class="hidden flex-1 flex flex-col bg-[#ffffff]">
+            <div class="px-6 py-2 bg-[#ffffff] text-xs font-semibold text-gray-500 uppercase tracking-widest border-b border-[#d0d7de] flex justify-between items-center">
                 <span>Execution Viewer</span>
-                <span id="stepCounter" class="text-[#58a6ff]">Step 0 / 0</span>
+                <span id="stepCounter" class="text-[#0969da]">Step 0 / 0</span>
             </div>
-            <div id="codeDisplay" class="flex-1 p-8 text-xl leading-relaxed whitespace-pre-wrap select-none overflow-auto custom-scrollbar">
+            <div id="codeDisplay" class="flex-1 p-8 text-xl leading-relaxed whitespace-pre-wrap select-none overflow-auto custom-scrollbar text-[#1f2328]">
                 <!-- Executing code will be rendered here -->
             </div>
-            <div class="p-6 bg-[#161b22] border-t border-[#30363d] flex items-center justify-between">
+            <div class="p-6 bg-[#f6f8fa] border-t border-[#d0d7de] flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="h-3 w-3 rounded-full bg-[#3fb950] status-dot"></div>
-                    <span id="instruction" class="text-sm text-gray-300">Press Spacebar to execute next step...</span>
+                    <div class="h-3 w-3 rounded-full bg-[#1a7f37] status-dot"></div>
+                    <span id="instruction" class="text-sm text-gray-600">Press Spacebar to execute next step...</span>
                 </div>
-                <button id="nextStepBtn" class="bg-[#30363d] hover:bg-[#484f58] px-4 py-2 rounded text-sm font-bold flex items-center gap-2">
-                    Next Step <span class="opacity-50 text-xs">SPACE</span>
+                <button id="nextStepBtn" class="bg-[#ffffff] hover:bg-[#f6f8fa] text-[#1f2328] border border-[#d0d7de] px-4 py-2 rounded text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
+                    Next Step <span class="opacity-40 text-xs font-normal">SPACE</span>
                 </button>
             </div>
         </div>
 
         <!-- Variables Sidebar -->
         <aside class="w-80 sidebar flex flex-col">
-            <div class="p-4 border-b border-[#30363d] flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
-                <h2 class="font-bold text-sm uppercase tracking-wider text-gray-400">Variables</h2>
+            <div class="p-4 border-b border-[#d0d7de] flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+                <h2 class="font-bold text-sm uppercase tracking-wider text-gray-500">Variables</h2>
             </div>
             <div id="variableList" class="flex-1 p-4 flex flex-col gap-3 overflow-auto custom-scrollbar">
-                <div class="text-center py-10 text-gray-600 italic text-sm">
+                <div class="text-center py-10 text-gray-400 italic text-sm">
                     No variables active
                 </div>
             </div>
-            <div class="p-4 border-t border-[#30363d]">
-                <h3 class="text-xs font-bold uppercase text-gray-500 mb-2">Loop Info</h3>
-                <div id="loopInfo" class="text-sm text-gray-400">
+            <div class="p-4 border-t border-[#d0d7de] bg-white">
+                <h3 class="text-xs font-bold uppercase text-gray-400 mb-2">Loop Info</h3>
+                <div id="loopInfo" class="text-sm text-gray-600 space-y-1">
                     Waiting for execution...
                 </div>
             </div>
@@ -155,14 +146,14 @@ for n in numbers:
     </main>
 
     <!-- Syntax Error Modal -->
-    <div id="errorModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
-        <div class="bg-[#161b22] border border-red-900 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h2 class="text-red-500 font-bold text-lg mb-2 flex items-center gap-2">
+    <div id="errorModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div class="bg-white border border-red-200 rounded-lg p-6 max-w-md w-full shadow-2xl">
+            <h2 class="text-red-600 font-bold text-lg mb-2 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
                 Syntax Support Error
             </h2>
-            <p id="errorMessage" class="text-gray-300 text-sm mb-4">The visualizer currently only supports simple for/while loops and basic assignments.</p>
-            <button id="closeError" class="w-full bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50 py-2 rounded transition-colors">Understood</button>
+            <p id="errorMessage" class="text-gray-600 text-sm mb-4">The visualizer currently only supports simple for/while loops and basic assignments.</p>
+            <button id="closeError" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-2 rounded transition-colors font-medium">Understood</button>
         </div>
     </div>
 
@@ -182,8 +173,6 @@ for n in numbers:
                 this.variables = {};
                 this.lines = code.trim().split('\n').map(l => l.trimEnd());
                 
-                // Identify loop structure
-                // We support: for x in range(n), for x in [list], while x < n
                 try {
                     this.simulateExecution();
                     return true;
@@ -196,18 +185,14 @@ for n in numbers:
             simulateExecution() {
                 let currentLine = 0;
                 let iterations = 0;
-                const MAX_ITERATIONS = 200; // Safety break
+                const MAX_ITERATIONS = 200; 
 
-                // Local scope for simulation
                 const scope = {};
 
                 while (currentLine < this.lines.length && iterations < MAX_ITERATIONS) {
                     let line = this.lines[currentLine].trim();
                     if (!line) { currentLine++; continue; }
 
-                    const indent = this.lines[currentLine].search(/\S/);
-
-                    // 1. Check for basic Assignment: x = y
                     const assignmentMatch = line.match(/^(\w+)\s*=\s*(.*)$/);
                     if (assignmentMatch && !line.startsWith('for') && !line.startsWith('while')) {
                         const varName = assignmentMatch[1];
@@ -219,7 +204,6 @@ for n in numbers:
                         continue;
                     }
 
-                    // 2. Check for For Loop: for x in range(n) or for x in [1,2,3]
                     const forMatch = line.match(/^for\s+(\w+)\s+in\s+(.+):$/);
                     if (forMatch) {
                         const varName = forMatch[1];
@@ -233,13 +217,10 @@ for n in numbers:
 
                         for (const val of collection) {
                             scope[varName] = val;
-                            // Step: Entering loop iteration
                             this.addStep(loopStartIndex, {...scope}, varName, val);
                             
-                            // Execute body
                             for (const bodyLineObj of loopBody) {
                                 let bodyLine = bodyLineObj.text.trim();
-                                // Basic body assignment support
                                 const bodyAssign = bodyLine.match(/^(\w+)\s*([+\-*/]=|=)\s*(.*)$/);
                                 if (bodyAssign) {
                                     const bVar = bodyAssign[1];
@@ -253,19 +234,16 @@ for n in numbers:
 
                                     this.addStep(bodyLineObj.index, {...scope}, bVar, scope[bVar]);
                                 } else {
-                                    // General line step (like print)
                                     this.addStep(bodyLineObj.index, {...scope});
                                 }
                                 iterations++;
                                 if (iterations > MAX_ITERATIONS) break;
                             }
                         }
-                        // Skip past loop body
                         currentLine = loopStartIndex + loopBody.length + 1;
                         continue;
                     }
 
-                    // 3. While loop: while x < 5:
                     const whileMatch = line.match(/^while\s+(.+):$/);
                     if (whileMatch) {
                         const condition = whileMatch[1];
@@ -273,7 +251,6 @@ for n in numbers:
                         const loopBody = this.getLoopBody(loopStartIndex);
 
                         while (this.evaluateCondition(condition, scope)) {
-                            // Step: Check condition
                             this.addStep(loopStartIndex, {...scope});
 
                             for (const bodyLineObj of loopBody) {
@@ -302,13 +279,11 @@ for n in numbers:
                         continue;
                     }
 
-                    // Default step for lines outside loops
                     this.addStep(currentLine, {...scope});
                     currentLine++;
                     iterations++;
                 }
 
-                // Final Step
                 this.addStep(-1, {...scope}, null, null, "Loop Finished");
             }
 
@@ -329,36 +304,26 @@ for n in numbers:
 
             evaluateExpression(expr, scope) {
                 expr = expr.trim();
-                
-                // range(n)
                 const rangeMatch = expr.match(/^range\((\d+)\)$/);
                 if (rangeMatch) return Array.from({length: parseInt(rangeMatch[1])}, (_, i) => i);
-                
-                // range(start, end)
                 const range2Match = expr.match(/^range\((\d+),\s*(\d+)\)$/);
                 if (range2Match) {
                     const s = parseInt(range2Match[1]);
                     const e = parseInt(range2Match[2]);
                     return Array.from({length: e - s}, (_, i) => i + s);
                 }
-
-                // list [1, 2, 3]
                 if (expr.startsWith('[') && expr.endsWith(']')) {
                     return expr.slice(1, -1).split(',').map(v => {
                         v = v.trim();
                         return isNaN(v) ? v.replace(/['"]/g, '') : Number(v);
                     });
                 }
-
-                // Basic math with variables: i * 10
                 try {
-                    // Safety check: replace scope variables in expression
                     let processedExpr = expr;
                     for (const [key, val] of Object.entries(scope)) {
                         const regex = new RegExp(`\\b${key}\\b`, 'g');
                         processedExpr = processedExpr.replace(regex, val);
                     }
-                    // Evaluate simple arithmetic
                     return Function(`"use strict"; return (${processedExpr})`)();
                 } catch (e) {
                     return expr;
@@ -388,8 +353,6 @@ for n in numbers:
                 });
             }
         }
-
-        // --- UI Logic ---
 
         const interpreter = new LoopInterpreter();
         let currentStepIdx = 0;
@@ -436,7 +399,7 @@ for n in numbers:
             visualPane.classList.add('hidden');
             startBtn.classList.remove('hidden');
             resetBtn.classList.add('hidden');
-            variableList.innerHTML = '<div class="text-center py-10 text-gray-600 italic text-sm">No variables active</div>';
+            variableList.innerHTML = '<div class="text-center py-10 text-gray-400 italic text-sm">No variables active</div>';
             loopInfo.textContent = 'Waiting for execution...';
         }
 
@@ -448,18 +411,16 @@ for n in numbers:
                 lineDiv.id = `line-${idx}`;
 
                 const lineNum = document.createElement('span');
-                lineNum.className = 'w-8 text-gray-600 text-sm mt-1 shrink-0';
+                lineNum.className = 'w-8 text-gray-400 text-sm mt-1 shrink-0';
                 lineNum.textContent = idx + 1;
 
                 const lineContent = document.createElement('div');
                 lineContent.className = 'flex-1';
                 
-                // Tokenize line to wrap words for swapping
                 const tokens = line.split(/(\W+)/);
                 tokens.forEach(token => {
                     const span = document.createElement('span');
                     span.className = 'code-token';
-                    // If it's a variable-like word, give it a class
                     if (token.match(/^[a-zA-Z_]\w*$/)) {
                         span.classList.add('token-word');
                         span.dataset.token = token;
@@ -478,7 +439,6 @@ for n in numbers:
             const step = interpreter.steps[idx];
             if (!step) return;
 
-            // Highlight line
             document.querySelectorAll('.line-container').forEach(el => el.classList.remove('line-highlight'));
             const activeLine = document.getElementById(`line-${step.lineIndex}`);
             if (activeLine) {
@@ -486,22 +446,15 @@ for n in numbers:
                 activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            // Update step counter
             stepCounter.textContent = `Step ${idx + 1} / ${interpreter.steps.length}`;
-
-            // Sidebar Variables
             updateVariablesSidebar(step.vars, step.activeVar);
 
-            // Handle "Swap" logic animation
             const lineTokens = activeLine?.querySelectorAll('.token-word');
             if (lineTokens && step.activeVar) {
                 lineTokens.forEach(tokenEl => {
                     if (tokenEl.dataset.token === step.activeVar) {
-                        const originalText = tokenEl.textContent;
                         tokenEl.classList.add('variable-swap', 'value-active');
                         tokenEl.textContent = step.value;
-                        
-                        // Briefly pulse
                         setTimeout(() => {
                             tokenEl.classList.remove('value-active');
                         }, 500);
@@ -511,7 +464,6 @@ for n in numbers:
                     }
                 });
             } else if (activeLine) {
-                // Reset all tokens in current line if no active swap
                 activeLine.querySelectorAll('.token-word').forEach(t => {
                     t.textContent = t.dataset.token;
                     t.classList.remove('variable-swap', 'value-active');
@@ -520,21 +472,21 @@ for n in numbers:
 
             if (step.message) {
                 instruction.textContent = step.message;
-                instruction.classList.replace('text-gray-300', 'text-[#58a6ff]');
+                instruction.classList.replace('text-gray-600', 'text-[#0969da]');
             } else {
                 instruction.textContent = "Press Spacebar to execute next step...";
-                instruction.classList.replace('text-[#58a6ff]', 'text-gray-300');
+                instruction.classList.replace('text-[#0969da]', 'text-gray-600');
             }
 
             loopInfo.innerHTML = `
-                <div class="flex justify-between mb-1"><span>Current Line</span><span>${step.lineIndex + 1}</span></div>
-                <div class="flex justify-between"><span>Iteration Status</span><span>${idx > 0 ? 'Active' : 'Start'}</span></div>
+                <div class="flex justify-between"><span>Current Line</span><span class="font-bold">${step.lineIndex + 1}</span></div>
+                <div class="flex justify-between"><span>Status</span><span class="font-bold">${idx > 0 ? 'Active' : 'Started'}</span></div>
             `;
         }
 
         function updateVariablesSidebar(vars, activeVar) {
             if (Object.keys(vars).length === 0) {
-                variableList.innerHTML = '<div class="text-center py-10 text-gray-600 italic text-sm">No variables active</div>';
+                variableList.innerHTML = '<div class="text-center py-10 text-gray-400 italic text-sm">No variables active</div>';
                 return;
             }
 
@@ -542,11 +494,11 @@ for n in numbers:
             for (const [key, val] of Object.entries(vars)) {
                 const item = document.createElement('div');
                 const isActive = key === activeVar;
-                item.className = `p-3 rounded border ${isActive ? 'border-[#388bfd] bg-[#388bfd1a]' : 'border-[#30363d] bg-[#0d1117]'} transition-all duration-300 flex justify-between items-center`;
+                item.className = `p-3 rounded border ${isActive ? 'border-[#0969da] bg-[#ddf4ff]' : 'border-[#d0d7de] bg-white'} transition-all duration-300 flex justify-between items-center shadow-sm`;
                 
                 item.innerHTML = `
-                    <span class="font-bold text-[#79c0ff]">${key}</span>
-                    <span class="${isActive ? 'text-[#aff5b4] scale-110' : 'text-gray-400'} transition-transform">${JSON.stringify(val)}</span>
+                    <span class="font-bold text-[#0550ae]">${key}</span>
+                    <span class="${isActive ? 'text-[#116329] font-bold scale-110' : 'text-gray-600'} transition-transform">${JSON.stringify(val)}</span>
                 `;
                 variableList.appendChild(item);
             }
@@ -562,8 +514,6 @@ for n in numbers:
             }
         }
 
-        // --- Event Listeners ---
-
         startBtn.addEventListener('click', startVisualization);
         resetBtn.addEventListener('click', reset);
         nextStepBtn.addEventListener('click', nextStep);
@@ -576,7 +526,6 @@ for n in numbers:
             }
         });
 
-        // Initialize with default example logic
         interpreter.parse(codeInput.value);
     </script>
 </body>
