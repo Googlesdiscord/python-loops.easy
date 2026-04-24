@@ -192,7 +192,7 @@ while i < 4:
     print(result)
     i += 1</textarea>
             <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)]">
-                💡 Tip: You can edit code even while visualizing! Press <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Start</kbd> to apply changes.
+                💡 Tip: Use <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Tab</kbd> for indentation. <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Ctrl + Enter</kbd> to run.
             </div>
         </div>
 
@@ -540,19 +540,33 @@ while i < 4:
             }
         });
 
-        // Intercept Tab key in textarea
+        // Intercept Tab key in textarea safely using insertText to preserve undo stack
         codeInput.addEventListener('keydown', (e) => {
+            // General Shortcuts
+            if ((e.ctrlKey || e.metaKey)) {
+                if (e.key === 's' || e.key === 'Enter') {
+                    e.preventDefault();
+                    start();
+                    return;
+                }
+            }
+
+            if (e.key === 'Escape') {
+                if (isExecuting) reset();
+                errorModal.classList.add('hidden');
+                return;
+            }
+
             if (e.key === 'Tab') {
                 e.preventDefault();
-                const start = codeInput.selectionStart;
-                const end = codeInput.selectionEnd;
-
-                // Insert 4 spaces
-                codeInput.value = codeInput.value.substring(0, start) +
-                    "    " + codeInput.value.substring(end);
-
-                // Put caret at right position
-                codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+                // Using insertText command preserves browser undo stack (Ctrl+Z)
+                if (!document.execCommand('insertText', false, '    ')) {
+                    // Fallback for browsers that might not support insertText on textarea
+                    const start = codeInput.selectionStart;
+                    const end = codeInput.selectionEnd;
+                    codeInput.value = codeInput.value.substring(0, start) + "    " + codeInput.value.substring(end);
+                    codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+                }
             }
         });
 
