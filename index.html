@@ -87,21 +87,10 @@
             border-radius: 4px;
         }
 
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 var(--accent-bg); }
-            70% { box-shadow: 0 0 0 8px transparent; }
-            100% { box-shadow: 0 0 0 0 transparent; }
-        }
-
-        .status-dot {
-            animation: pulse-green 2s infinite;
-        }
-
         #loadingOverlay {
-            background-color: #ffffff;
-            z-index: 100;
+            background-color: var(--bg-app);
+            z-index: 200;
         }
-        [data-theme="dark"] #loadingOverlay { background-color: #0d1117; }
 
         .spinner {
             width: 40px;
@@ -123,7 +112,7 @@
     <!-- Loading Screen -->
     <div id="loadingOverlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="spinner mb-4"></div>
-        <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse">LOADING VISUALIZER</div>
+        <div class="text-lg font-bold tracking-widest text-gray-500 animate-pulse uppercase">Initializing...</div>
     </div>
 
     <!-- Startup Popup -->
@@ -165,7 +154,6 @@
             <h1 class="text-xl font-bold tracking-tight">PyLoop<span class="text-[var(--accent)]">Visualizer</span></h1>
         </div>
         <div class="flex items-center gap-4">
-            <!-- Theme Toggle -->
             <button id="themeToggle" class="p-2 rounded-lg border border-[var(--border)] bg-[var(--bg-app)] hover:bg-[var(--bg-sidebar)] transition-all">
                 <svg id="sunIcon" class="hidden w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zm2.12 10.607a1 1 0 010-1.414l.706-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"/></svg>
                 <svg id="moonIcon" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
@@ -195,7 +183,7 @@ while i < 4:
     print(result)
     i += 1</textarea>
             <div class="p-4 bg-[var(--bg-sidebar)] text-sm text-[var(--text-muted)] border-t border-[var(--border)]">
-                💡 Tip: Press <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Spacebar</kbd> to step through.
+                💡 Tip: Use <kbd class="px-2 py-0.5 bg-[var(--bg-app)] border border-[var(--border)] rounded text-xs">Spacebar</kbd> to step through.
             </div>
         </div>
 
@@ -229,7 +217,7 @@ while i < 4:
             </div>
 
             <div class="p-4 border-t border-[var(--border)] bg-[var(--bg-app)]">
-                <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] mb-2">Execution Metadata</h3>
+                <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] mb-2">Metadata</h3>
                 <div id="loopInfo" class="text-xs text-[var(--text-muted)] space-y-1">Waiting...</div>
             </div>
         </aside>
@@ -256,28 +244,24 @@ while i < 4:
 
             validateSyntax(code) {
                 const lines = code.trim().split('\n');
-                if (!code.trim()) return "Error: No code provided.";
+                if (!code.trim()) return "Error: Code area is empty.";
                 
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
                     const indent = lines[i].search(/\S/);
-
-                    // Check for unbalanced parens
                     const openP = (line.match(/\(/g) || []).length;
                     const closeP = (line.match(/\)/g) || []).length;
                     if (openP !== closeP) return `SyntaxError: Line ${i + 1} - Unbalanced parentheses.`;
 
-                    // Check for colons on loops
                     if ((line.startsWith('for ') || line.startsWith('while ')) && !line.endsWith(':')) {
-                        return `SyntaxError: Line ${i + 1} - Missing ':' at end of loop declaration.`;
+                        return `SyntaxError: Line ${i + 1} - Missing colon ':' at end of loop declaration.`;
                     }
 
-                    // Check for indentation after colons
                     if (i > 0 && lines[i-1].trim().endsWith(':')) {
                         if (indent === 0 || indent <= lines[i-1].search(/\S/)) {
-                            return `IndentationError: Line ${i + 1} - Expected an indented block.`;
+                            return `IndentationError: Line ${i + 1} - Expected an indented block for the loop body.`;
                         }
                     }
                 }
@@ -300,19 +284,15 @@ while i < 4:
                     const whileMatch = lineRaw.match(/^((\s*)while\s+)(.+)(:)$/);
 
                     if (forMatch) {
-                        const indent = forMatch[2];
-                        const varName = forMatch[3];
-                        const rest = forMatch[4];
-                        const collectionExpr = rest.replace('in ', '').replace(':', '').trim();
-                        const collection = this.evaluateExpression(collectionExpr, scope);
+                        const indent = forMatch[2], varName = forMatch[3], rest = forMatch[4];
+                        const collection = this.evaluateExpression(rest.replace('in ', '').replace(':', '').trim(), scope);
                         const loopBody = this.getLoopBody(currentLineIdx);
                         const loopStart = currentLineIdx;
 
                         for (const val of collection) {
                             scope[varName] = val;
                             const override = `${indent}for <span class="variable-swap value-active">${val}</span>${rest}`;
-                            this.addStep(loopStart, {...scope}, override, [...currentConsole], `Iterator ${varName} is now ${val}`);
-                            
+                            this.addStep(loopStart, {...scope}, override, [...currentConsole], `Assigning loop iterator ${varName} = ${val}`);
                             for (const bodyLine of loopBody) {
                                 this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
                                 iterations++;
@@ -323,18 +303,14 @@ while i < 4:
                     }
 
                     if (whileMatch) {
-                        const prefix = whileMatch[1];
-                        const indent = whileMatch[2];
-                        const cond = whileMatch[3];
-                        const suffix = whileMatch[4];
+                        const prefix = whileMatch[1], cond = whileMatch[3], suffix = whileMatch[4];
                         const loopBody = this.getLoopBody(currentLineIdx);
                         const loopStart = currentLineIdx;
 
                         while (true) {
-                            // Sequential substitution for while condition
                             const conditionSteps = this.generateSubstitutionSteps(cond, scope);
                             conditionSteps.forEach(s => {
-                                this.addStep(loopStart, {...scope}, `${prefix}${s}${suffix}`, [...currentConsole], "Checking loop condition...");
+                                this.addStep(loopStart, {...scope}, `${prefix}${s}${suffix}`, [...currentConsole], "Checking condition...");
                             });
                             
                             if (this.evaluateCondition(cond, scope) && iterations < MAX_ITERATIONS) {
@@ -342,9 +318,7 @@ while i < 4:
                                     this.processLine(bodyLine.text, bodyLine.index, scope, currentConsole);
                                     iterations++;
                                 }
-                            } else {
-                                break;
-                            }
+                            } else break;
                         }
                         currentLineIdx = loopStart + loopBody.length + 1;
                         continue;
@@ -358,41 +332,51 @@ while i < 4:
             }
 
             processLine(lineRaw, idx, scope, currentConsole) {
-                // Assignment logic (supporting sequential substitution)
+                // Modified assignment logic to handle compound assignment granularity
                 const am = lineRaw.match(/^((\s*)(\w+)\s*(\+|-|\*|\/|)?=\s*)(.*)$/);
                 if (am) {
                     const prefix = am[1], indent = am[2], varName = am[3], op = am[4], expr = am[5];
                     
-                    // Generate one-by-one substitution steps for the RHS expression
-                    const rhsSteps = this.generateSubstitutionSteps(expr, scope);
-                    rhsSteps.forEach(s => {
-                        this.addStep(idx, {...scope}, `${prefix}${s}`, [...currentConsole], "Substituting variable values...");
-                    });
+                    if (op) {
+                        // Compound Assignment (e.g., i += 1)
+                        const currentVal = scope[varName] || 0;
+                        const expandedRhs = `${varName} ${op} ${expr}`;
+                        
+                        // Step 1: Substitution (Show i = 0 + 1)
+                        const substitutionSteps = this.generateSubstitutionSteps(expandedRhs, scope);
+                        substitutionSteps.forEach(s => {
+                            this.addStep(idx, {...scope}, `${indent}${varName} = ${s}`, [...currentConsole], `Incrementing ${varName}...`);
+                        });
 
-                    // Final step showing the result
-                    const val = this.evaluateExpression(expr, scope);
-                    if (!op) scope[varName] = val;
-                    else {
-                        if (op === '+') scope[varName] = (scope[varName] || 0) + val;
-                        else if (op === '-') scope[varName] = (scope[varName] || 0) - val;
-                        else if (op === '*') scope[varName] = (scope[varName] || 0) * val;
+                        // Step 2: Final Assignment
+                        const rhsVal = this.evaluateExpression(expr, scope);
+                        if (op === '+') scope[varName] = currentVal + rhsVal;
+                        else if (op === '-') scope[varName] = currentVal - rhsVal;
+                        else if (op === '*') scope[varName] = currentVal * rhsVal;
+                        
+                        this.addStep(idx, {...scope}, `${indent}${varName} = <span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `Result: ${varName} is now ${scope[varName]}`);
+                    } else {
+                        // Standard Assignment (e.g., x = i + 1)
+                        const rhsSteps = this.generateSubstitutionSteps(expr, scope);
+                        rhsSteps.forEach(s => {
+                            this.addStep(idx, {...scope}, `${prefix}${s}`, [...currentConsole], "Substituting values...");
+                        });
+
+                        const val = this.evaluateExpression(expr, scope);
+                        scope[varName] = val;
+                        this.addStep(idx, {...scope}, `${prefix}<span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `${varName} is now ${scope[varName]}`);
                     }
-                    
-                    this.addStep(idx, {...scope}, `${prefix}<span class="variable-swap value-active">${scope[varName]}</span>`, [...currentConsole], `${varName} calculated to ${scope[varName]}`);
                     return;
                 }
 
-                // Print logic (sequential substitution)
                 const pm = lineRaw.match(/^((\s*)print\()(.+)(\))$/);
                 if (pm) {
-                    const prefix = pm[1], indent = pm[2], expr = pm[3], suffix = pm[4];
+                    const prefix = pm[1], expr = pm[3], suffix = pm[4];
                     const val = this.evaluateExpression(expr, scope);
-                    
                     const argSteps = this.generateSubstitutionSteps(expr, scope);
                     argSteps.forEach(s => {
                         this.addStep(idx, {...scope}, `${prefix}${s}${suffix}`, [...currentConsole], "Substituting print argument...");
                     });
-
                     currentConsole.push(String(val));
                     this.addStep(idx, {...scope}, `${prefix}${val}${suffix}`, [...currentConsole], `Output: ${val}`);
                     return;
@@ -401,36 +385,24 @@ while i < 4:
                 this.addStep(idx, {...scope}, null, [...currentConsole]);
             }
 
-            /**
-             * Generates a sequence of strings where each variable is replaced one-by-one.
-             * Example: "i + i" -> ["10 + i", "10 + 10"]
-             */
             generateSubstitutionSteps(expr, scope) {
                 const steps = [];
                 const tokens = expr.split(/(\W+)/);
                 const varTokensIndices = [];
-                
-                // Identify indices of words that are variables in the current scope
                 tokens.forEach((t, i) => {
-                    if (t.match(/^[a-zA-Z_]\w*$/) && scope.hasOwnProperty(t)) {
-                        varTokensIndices.push(i);
-                    }
+                    if (t.match(/^[a-zA-Z_]\w*$/) && scope.hasOwnProperty(t)) varTokensIndices.push(i);
                 });
-
                 if (varTokensIndices.length === 0) return [];
 
-                // Generate a step for each substitution
                 for (let i = 0; i < varTokensIndices.length; i++) {
-                    const currentStepTokens = [...tokens];
-                    // Replace all tokens up to the current one with their values
+                    const currentTokens = [...tokens];
                     for (let j = 0; j <= i; j++) {
                         const idx = varTokensIndices[j];
                         const varName = tokens[idx];
-                        currentStepTokens[idx] = `<span class="variable-swap value-active">${scope[varName]}</span>`;
+                        currentTokens[idx] = `<span class="variable-swap value-active">${scope[varName]}</span>`;
                     }
-                    steps.push(currentStepTokens.join(''));
+                    steps.push(currentTokens.join(''));
                 }
-                
                 return steps;
             }
 
@@ -502,26 +474,21 @@ while i < 4:
         const errorModal = document.getElementById('errorModal');
         const errorMessage = document.getElementById('errorMessage');
 
-        // Robust initialization logic to clear loading screen
-        const hideLoading = () => {
-            if (!loadingOverlay.classList.contains('hidden')) {
-                setTimeout(() => {
-                    loadingOverlay.classList.add('opacity-0');
-                    setTimeout(() => {
-                        loadingOverlay.classList.add('hidden');
-                        startupPopup.classList.remove('hidden');
-                        setTimeout(() => popupContent.classList.remove('scale-90'), 50);
-                    }, 800);
-                }, 500);
-            }
+        // Stronger initialization logic
+        const clearLoading = () => {
+            if (loadingOverlay.classList.contains('hidden')) return;
+            loadingOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                startupPopup.classList.remove('hidden');
+                setTimeout(() => popupContent.classList.remove('scale-90'), 50);
+            }, 600);
         };
 
-        if (document.readyState === 'complete') {
-            hideLoading();
-        } else {
-            window.addEventListener('load', hideLoading);
-            // Fallback for environments where 'load' might have already fired
-            setTimeout(hideLoading, 2000); 
+        if (document.readyState === 'complete') clearLoading();
+        else {
+            window.addEventListener('load', clearLoading);
+            setTimeout(clearLoading, 3000); // 3s maximum wait
         }
 
         document.getElementById('closeStartup').addEventListener('click', () => startupPopup.classList.add('hidden'));
@@ -537,13 +504,11 @@ while i < 4:
         function start() {
             const code = codeInput.value;
             const error = interpreter.validateSyntax(code);
-            
             if (error) {
                 errorMessage.textContent = error;
                 errorModal.classList.remove('hidden');
                 return;
             }
-
             if (interpreter.parse(code)) {
                 isExecuting = true;
                 currentIdx = 0;
@@ -590,13 +555,10 @@ while i < 4:
             if (activeLine) {
                 activeLine.classList.add('line-highlight');
                 activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                if (step.lineOverride) {
-                    activeLine.querySelector('.line-content').innerHTML = step.lineOverride;
-                }
+                if (step.lineOverride) activeLine.querySelector('.line-content').innerHTML = step.lineOverride;
             }
 
             stepCounter.textContent = `Step ${idx+1} / ${interpreter.steps.length}`;
-            
             consoleOutput.innerHTML = step.output.length > 0 
                 ? step.output.map(o => `<div class="mb-1 text-[var(--accent)]">> ${o}</div>`).join('')
                 : '<div class="text-gray-500 italic">No output yet...</div>';
@@ -604,8 +566,8 @@ while i < 4:
 
             document.getElementById('instruction').textContent = step.message || "Press Spacebar to step...";
             document.getElementById('loopInfo').innerHTML = `
-                <div class="flex justify-between"><span>Current Line:</span><span class="font-bold">${step.lineIndex + 1}</span></div>
-                <div class="flex justify-between"><span>Active Scopes:</span><span class="font-bold">${Object.keys(step.vars).length}</span></div>
+                <div class="flex justify-between"><span>Line Index:</span><span class="font-bold">${step.lineIndex + 1}</span></div>
+                <div class="flex justify-between"><span>Scopes Captured:</span><span class="font-bold">${Object.keys(step.vars).length}</span></div>
             `;
         }
 
